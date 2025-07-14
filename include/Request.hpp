@@ -1,0 +1,29 @@
+#ifndef REQUEST_HPP
+#define REQUEST_HPP
+
+#include <iostream>
+#include <map>
+
+class Request {
+	private:
+		std::string _method;
+		std::string _uri;
+		std::string _version;
+		std::map<std::string, std::string> _headers;
+	public:
+		Request(std::string method, std::string uri, std::string version);
+		~Request();
+
+		void setMethod(const std::string method);
+		void setUri(const std::string uri);
+		void setVersion(const std::string version);
+		void addHeader(const std::string key, const std::string value);
+
+		const std::string &getMethod() const;
+		const std::string &getUri() const;
+		const std::string &getVersion() const;
+		const std::map<std::string, std::string> &getHeaders() const;
+
+};
+
+#endif
