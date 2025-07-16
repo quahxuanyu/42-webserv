@@ -2,7 +2,7 @@ CXX = g++
 CXX_FLAGS = -Wall -Wextra -Werror -std=c++98
 
 SRC_DIR = src
-SRC_FILES = main.cpp Request.cpp Response.cpp
+SRC_FILES = main.cpp Request.cpp Response.cpp handle_get_response.cpp helper.cpp
 SRC = $(addprefix $(SRC_DIR)/, $(SRC_FILES))
 OBJS_DIR = objs
 OBJS = $(addprefix $(OBJS_DIR)/, $(notdir $(SRC:.cpp=.o)))
