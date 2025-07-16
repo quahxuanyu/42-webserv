@@ -73,7 +73,7 @@ void add_to_pfds(std::vector<pollfd> *pfds, int new_fd, int *fd_count, int *fd_s
 {
 	if (*fd_count == *fd_size)
 	{	
-		std::cout << "client > 5" << std::endl;
+		std::cout << MAGENTA << "Expanding capacity" << RESET << std::endl;
 		*fd_size *= 2; //double the size
 	}
 	(*pfds)[*fd_count].fd = new_fd;
@@ -98,7 +98,7 @@ void handle_new_connection(int listener, int *fd_count, int *fd_size, std::vecto
 	else
 	{
 		add_to_pfds(pfds, new_fd, fd_count, fd_size);
-		std::cout << "pollserver: new connection" << std::endl;
+		std::cout << GREEN << "Server: new connection from fd " << new_fd << GREEN << std::endl;
 	}
 }
 
@@ -108,13 +108,12 @@ void del_from_pfds(std::vector<pollfd> *pfds, int i, int *fd_count)
 	(*fd_count)--;
 }
 
-void handle_client_read(int listener, std::unordered_map<int, std::string> *responses, int *fd_count, std::vector<pollfd> *pfds, int *pfd_i)
+void handle_client_read(int listener, std::unordered_map<int, std::string> *requests, std::unordered_map<int, std::string> *responses, int *fd_count, std::vector<pollfd> *pfds, int *pfd_i)
 {
-	std::cout << GREEN << "Server reading from fd " << (*pfds)[*pfd_i].fd << RESET << std::endl;
+	std::cout << YELLOW << "Server reading from fd " << (*pfds)[*pfd_i].fd << RESET << std::endl;
 	char buf[256];
 	int nbytes = recv((*pfds)[*pfd_i].fd, buf, sizeof(buf), 0);
 	int sender_fd = (*pfds)[*pfd_i].fd;
-	static std::string request = "";
 
 	if (nbytes <= 0)
 	{
@@ -128,33 +127,34 @@ void handle_client_read(int listener, std::unordered_map<int, std::string> *resp
 	}
 	else
 	{
-		request += std::string(buf);
-		if (request.find("\r\n\r\n") != std::string::npos)
+		(*requests)[sender_fd] += std::string(buf);
+		if ((*requests)[sender_fd].find("\r\n\r\n") != std::string::npos)
 		{
-			std::cout << "pollserver : recv from fd " << sender_fd << ": \n - REQUEST -\n" << request << std::endl;
+			std::cout << "Server : recv from fd " << sender_fd << ": \n - REQUEST -\n" << BLUE << (*requests)[sender_fd] << RESET << std::endl;
+			(*requests).erase(sender_fd);
+			//generate response
 			std::string body = "Hello !!!!";
 			std::string response =
 			"HTTP/1.1 200 OK\r\n"
 			"Content-Type: text/plain\r\n"
 			"Content-Length: " + std::to_string(body.length()) + "\r\n\r\n" + body;
-			responses->insert({sender_fd, response});
+
+			//store response to map
+			(*responses)[sender_fd] = response;
+
+			//allow send()
 			(*pfds)[*pfd_i].events |= POLLOUT;
-			std::cout << (*responses)[sender_fd] << std::endl;
 		}
 	}
 }
 
-void handle_client_write(int listener, std::unordered_map<int, std::string> *responses, int *fd_count, std::vector<pollfd> *pfds, int *pfd_i)
+void handle_client_write(int listener, std::unordered_map<int, std::string> *requests, std::unordered_map<int, std::string> *responses, int *fd_count, std::vector<pollfd> *pfds, int *pfd_i)
 {
-	std::cout << GREEN << "Server writing to fd " << (*pfds)[*pfd_i].fd << RESET << std::endl;
+	std::cout << YELLOW << "Server writing to fd " << (*pfds)[*pfd_i].fd << RESET << std::endl;
 
 	int sender_fd = (*pfds)[*pfd_i].fd;
-
-	std::cout << (*responses)[sender_fd] << std::endl;
-
 	std::string &response = (*responses)[sender_fd];
 
-	std::cout << "RESPONSE BEING SENT:\n---\n" << (*responses)[sender_fd]<< "\n---\n";
 	int bytes_sent = send(sender_fd, response.c_str(), response.length(), 0);
 	if (bytes_sent > 0)
 		response.erase(0, bytes_sent);
@@ -167,26 +167,25 @@ void handle_client_write(int listener, std::unordered_map<int, std::string> *res
 
 void close_connection(int *fd_count, std::vector<pollfd> *pfds, int *pfd_i)
 {
-	std::cout << "Closing connection to fd " << (*pfds)[*pfd_i].fd << std::endl;
+	std::cout << RED << "Closing connection to fd " << (*pfds)[*pfd_i].fd << RESET << std::endl;
 	close((*pfds)[*pfd_i].fd);
 	del_from_pfds(pfds, *pfd_i, fd_count);
 }
 
 //process existing connections
-void process_connections(int listener, std::unordered_map<int, std::string> *responses, int *fd_count, int *fd_size, std::vector<pollfd> *pfds)
+void process_connections(int listener, std::unordered_map<int, std::string> *requests, std::unordered_map<int, std::string> *responses, int *fd_count, int *fd_size, std::vector<pollfd> *pfds)
 {
 	for (int i = 0; i < *fd_count; i++)
 	{
-		if ((*pfds)[i].fd == listener && (*pfds)[i].revents & (POLLIN))
+		if ((*pfds)[i].fd == listener && (*pfds)[i].revents & POLLIN)
 			handle_new_connection(listener, fd_count, fd_size, pfds);
 
-		//check if anyone is ready to read
 		else if ((*pfds)[i].revents & POLLHUP)
 			close_connection(fd_count, pfds, &i);
 		else if ((*pfds)[i].revents & POLLIN)
-			handle_client_read(listener, responses, fd_count, pfds, &i);
+			handle_client_read(listener, requests, responses, fd_count, pfds, &i);
 		else if ((*pfds)[i].revents & POLLOUT)
-			handle_client_write(listener, responses, fd_count, pfds, &i);
+			handle_client_write(listener, requests, responses, fd_count, pfds, &i);
 
 	}
 }
@@ -212,9 +211,9 @@ int main()
 	sockfd_count = 1;
 
 	std::unordered_map<int, std::string> responses;
+	std::unordered_map<int, std::string> requests;
 
-
-	std::cout << "pollserver: waiting for connections.." << std::endl;
+	std::cout << "Server: waiting for connections.." << std::endl;
 	while (1)
 	{
 		int poll_count = poll(pfds.data(), sockfd_count, -1);
@@ -223,7 +222,7 @@ int main()
 			std::cerr << "Error : poll" << std::endl;
 			return (1);
 		}
-		process_connections(listener, &responses, &sockfd_count, &sockfd_size, &pfds);
+		process_connections(listener, &requests, &responses, &sockfd_count, &sockfd_size, &pfds);
 	}
 
 	return 0;
