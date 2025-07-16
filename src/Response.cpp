@@ -1,4 +1,7 @@
 #include "../include/Response.hpp"
+#include "../include/webserv.hpp"
+
+Response::Response() {}
 
 Response::Response(std::string version, int statusCode, std::string statusMessage)
 	: _version(version), _statusCode(statusCode), _statusMessage(statusMessage) {}
@@ -44,4 +47,15 @@ const std::map<std::string, std::string> &Response::getHeaders() const
 
 const std::string &Response::getBody() const {
 	return _body;
+}
+
+std::string Response::toString() const {
+	std::string response_str;
+	response_str += _version + " " + to_string(_statusCode) + " " + _statusMessage + "\r\n";
+	std::map<std::string, std::string>::const_iterator i;
+	for (i = _headers.begin(); i != _headers.end(); ++i) {
+		response_str += i->first + ": " + i->second + "\r\n";
+	}
+	response_str += "\r\n" + _body;
+	return response_str;
 }

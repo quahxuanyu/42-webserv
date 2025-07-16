@@ -11,6 +11,7 @@ class Request {
 		std::string _version;
 		std::map<std::string, std::string> _headers;
 	public:
+		Request();
 		Request(std::string method, std::string uri, std::string version);
 		~Request();
 

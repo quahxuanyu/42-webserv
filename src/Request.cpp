@@ -1,5 +1,7 @@
 #include "../include/Request.hpp"
 
+Request::Request() {}
+
 Request::Request(std::string method, std::string uri, std::string version)
 	: _method(method), _uri(uri), _version(version) {}
 
