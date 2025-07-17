@@ -229,19 +229,19 @@
 // 	return 0;
 // }
 
-int main()
-{
-    try 
-	{
-        Server server("0.0.0.0", "8080");
-        server.multiplexing();  // Run forever
-    } 
-	catch(const std::exception &e)
-	{
-		std::cerr << RED << "Server initialization failed: " << e.what() << RESET << std::endl;
-		return 1;
-	}
-}
+// int main()
+// {
+//     try 
+// 	{
+//         Server server("0.0.0.0", "8080");
+//         server.multiplexing();  // Run forever
+//     } 
+// 	catch(const std::exception &e)
+// 	{
+// 		std::cerr << RED << "Server initialization failed: " << e.what() << RESET << std::endl;
+// 		return 1;
+// 	}
+// }
 
 
 

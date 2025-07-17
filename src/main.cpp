@@ -10,22 +10,22 @@ void print_request(Request &request) {
 	}
 }
 
-// int main(int argc, char *argv[], char *env[])
-// {
-// 	(void) argc;
-// 	(void) argv;
-// 	(void) env;
-// 	std::cout << "----------Request-----------" << std::endl;
-// 	Request request("GET", "/", "HTTP/1.1");
-// 	request.addHeader("Host", "localhost");
-// 	request.addHeader("User-Agent", "WebClient/1.0");
-// 	print_request(request);
+int main(int argc, char *argv[], char *env[])
+{
+	(void) argc;
+	(void) argv;
+	// (void) env;
+	// std::cout << "----------Request-----------" << std::endl;
+	// Request request("GET", "/", "HTTP/1.1");
+	// request.addHeader("Host", "localhost");
+	// request.addHeader("User-Agent", "WebClient/1.0");
+	// print_request(request);
 
-// 	std::cout << "\n----------Response-----------" << std::endl;
-// 	Response &response = handle_get_response(request);
-// 	std::cout << response.toString();
-// 	delete &response;
+	// std::cout << "\n----------Response-----------" << std::endl;
+	// Response &response = handle_get_response(request);
+	// std::cout << response.toString();
+	// delete &response;
 
-// 	// std::cout << "----------CGI TEST-----------" << std::endl;
-// 	// execute("./cgi-bin/test.cgi", env);
-// }
+	std::cout << "----------CGI TEST-----------" << std::endl;
+	execute("./cgi-bin/test.cgi", env);
+}

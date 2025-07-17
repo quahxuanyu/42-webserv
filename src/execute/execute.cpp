@@ -13,8 +13,7 @@ void execute(std::string uri, char **env) {
     }
     else
     {
-        while(waitpid(-1, NULL, WUNTRACED))
-            ;
+        waitpid(-1, NULL, WUNTRACED);
         std::cout << "CGI executed: " << cgi_path << std::endl;
     }
 }
