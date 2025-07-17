@@ -2,10 +2,12 @@ CXX = g++
 CXX_FLAGS = -Wall -Wextra -Werror -std=c++98
 
 SRC_DIR = src
-SRC_FILES = main.cpp Request.cpp Response.cpp handle_get_response.cpp helper.cpp
-SRC = $(addprefix $(SRC_DIR)/, $(SRC_FILES))
+# Use find to locate all .cpp files in src and its subdirectories
+SRC = $(shell find $(SRC_DIR) -type f -name '*.cpp')
+
 OBJS_DIR = objs
-OBJS = $(addprefix $(OBJS_DIR)/, $(notdir $(SRC:.cpp=.o)))
+# Replace src/ with objs/ and .cpp with .o for object files
+OBJS = $(patsubst $(SRC_DIR)/%.cpp, $(OBJS_DIR)/%.o, $(SRC))
 
 # Target executable
 TARGET = webserv
@@ -17,7 +19,7 @@ $(TARGET): $(OBJS)
 	$(CXX) $(CXX_FLAGS) -o $(TARGET) $(OBJS)
 
 $(OBJS_DIR)/%.o: $(SRC_DIR)/%.cpp
-	@mkdir -p $(OBJS_DIR)
+	@mkdir -p $(dir $@) # Create subdirectories in objs/ as needed
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
 
 clean:
