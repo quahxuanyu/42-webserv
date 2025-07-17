@@ -5,8 +5,19 @@
 #include <netdb.h> // addrinfo 
 #include <cstring>
 #include <unistd.h>
-#include <unordered_map>
 #include "../include/Client.hpp"
+
+Server::Server()
+{
+	//get_listener_socket();
+	std::cout << "default conatructor called" << _port << std::endl;
+}
+
+Server::Server(std::string IP, std::string port) : _IP(IP), _port(port), _fd_count(0)
+{
+	get_listener_socket();
+	std::cout << "Server (localhost, port 8080) created: " << _listener_fd << std::endl;
+}
 
 
 void Server::get_listener_socket()
@@ -16,15 +27,15 @@ void Server::get_listener_socket()
 	int status;
 
 	struct addrinfo hints;
-	struct addrinfo *ai = nullptr;
-	struct addrinfo *p = nullptr;
+	struct addrinfo *ai = NULL;
+	struct addrinfo *p = NULL;
 
 	memset(&hints, 0 , sizeof(hints));
 	hints.ai_family = AF_INET; //IPv4
 	hints.ai_socktype = SOCK_STREAM; //TCP
 	hints.ai_flags = AI_PASSIVE; // bind with local address
 
-	status = getaddrinfo(NULL, "8080", &hints, &ai);
+	status = getaddrinfo(NULL, "8080", &hints, &ai);   // might change
 	if (status)
 		throw std::runtime_error("getaddrinfo failed: " + std::string(gai_strerror(status)));
 	
@@ -65,24 +76,21 @@ void Server::get_listener_socket()
 	_listener_fd = listener;
 }
 
-
-void Server::add_to_pfds(int new_fd, int *fd_count, int *fd_size)
+//create new poll fd and add to pfds vector
+void Server::add_to_pfds(int client_fd)
 {	
-	if (*fd_count == *fd_size)
-	{	
-		std::cout << MAGENTA << "Expanding capacity" << RESET << std::endl;
-		*fd_size *= 2; //double the size
-	}
-	(*_pfds)[*fd_count].fd = new_fd;
-	(*_pfds)[*fd_count].events = POLLIN; //notified when socket has incoming data
-	(*_pfds)[*fd_count].revents = 0;
+	pollfd new_fd;
+	new_fd.fd = client_fd;
+	new_fd.events = POLLIN; //notified when socket has incoming data
+	new_fd.revents = 0;
 
-	(*fd_count)++;
-	std::cout << "number of socket: " << *fd_count << std::endl;
+	_pfds.push_back(new_fd);
+	_fd_count++;
+	std::cout << "number of socket: " << _fd_count << std::endl;
 }
 
 
-void Server::accept_connection(int *fd_count, int *fd_size)
+void Server::accept_connection()
 {
 	struct sockaddr_storage client_addr;
 	socklen_t addr_len;
@@ -92,83 +100,76 @@ void Server::accept_connection(int *fd_count, int *fd_size)
 	new_fd = accept(_listener_fd, (struct sockaddr *)&client_addr, &addr_len);
 
 	if (new_fd == -1)
-		throw std::runtime_error("Accept failed");
+		throw std::runtime_error("Aceept failed");
 	else
 	{
 		//create new client and add to the map
 		_clients[new_fd] = Client(new_fd);
-		add_to_pfds(new_fd, fd_count, fd_size);
+		add_to_pfds(new_fd);
 		std::cout << GREEN << "Server: new connection from fd " << new_fd << GREEN << std::endl;
 	}
 }
 
-void Server::close_connection(int *fd_count, int *pfd_i)
+void Server::close_connection(int pfd_i)
 {
-	std::cout << RED << "Closing connection to fd " << (*_pfds)[*pfd_i].fd << RESET << std::endl;
-	_clients.erase((*_pfds)[*pfd_i].fd);
-	close((*_pfds)[*pfd_i].fd);
-	_pfds[*pfd_i] = _pfds[*fd_count - 1];
-	(*fd_count)--;
+	std::cout << RED << "Closing connection fd " << _pfds[pfd_i].fd << RESET << std::endl;
+
+	_clients.erase(_pfds[pfd_i].fd);	//remove client from map
+
+	close(_pfds[pfd_i].fd);	//close client fd
+	_pfds[pfd_i] = _pfds[_fd_count - 1];	//replace it with the last pfds (efficiency)
+	_fd_count--;
 }
 
-void Server::handle_client_read(int *fd_count, int *pfd_i)
+void Server::handle_client_read(int pfd_i)
 {
-	int client_fd = (*_pfds)[*pfd_i].fd;
-	if (!_clients[client_fd].recv_data(_pfds, fd_count, pfd_i))
-		close_connection(fd_count, pfd_i);
+	int client_fd = _pfds[pfd_i].fd;
+	if (!_clients[client_fd].recv_data(&_pfds, pfd_i))
+		close_connection(pfd_i);
 }
 
-void Server::handle_client_write(int *fd_count, int *pfd_i)
+void Server::handle_client_write(int pfd_i)
 {
-	int client_fd = (*_pfds)[*pfd_i].fd;
-	if (!_clients[client_fd].send_data(_pfds, fd_count, pfd_i))
-		close_connection(fd_count, pfd_i);
+	int client_fd = _pfds[pfd_i].fd;
+	if (!_clients[client_fd].send_data(&_pfds, pfd_i))
+		close_connection(pfd_i);
 }
 
-void Server::process_connections(int *fd_count, int *fd_size, std::vector<pollfd> *pfds)
+void Server::process_connections()
 {
-	for (int i = 0; i < *fd_count; i++)
+	for (int i = 0; i < _fd_count; i++)
 	{
-		if ((*pfds)[i].fd == _listener_fd && (*pfds)[i].revents & POLLIN)
-			accept_connection(fd_count, fd_size);
-		else if ((*pfds)[i].revents & POLLHUP)
-			close_connection(fd_count, &i);
-		else if ((*pfds)[i].revents & POLLIN)
-			handle_client_read(fd_count, &i);
-		else if ((*pfds)[i].revents & POLLOUT)
-			handle_client_write(fd_count, &i);
+		if ((_pfds)[i].fd == _listener_fd && (_pfds)[i].revents & POLLIN)
+			accept_connection();
+		else if ((_pfds)[i].revents & POLLHUP)
+			close_connection(i);
+		else if ((_pfds)[i].revents & POLLIN)
+			handle_client_read(i);
+		else if ((_pfds)[i].revents & POLLOUT)
+			handle_client_write(i);
 	}
 }
 
 void Server::multiplexing()
 {
-	int listener; //listening socket fd
+	//get a listener socket for a port & IP
+	
 
-	int sockfd_size = 5;
-	int sockfd_count = 0;
-
-	std::vector<pollfd> pfds(sockfd_size);
-	get_listener_socket();
-	if (listener == -1)
-	{
-		std::cerr << "errror getting listening socket" << std::endl;
-		exit(1);
-	}
-	std::cout << "listener fd (localhost, port 8080): " << listener << std::endl;
-	pfds[0].fd = listener;
-	pfds[0].events = POLLIN;
-
-	sockfd_count = 1;
-
-	std::unordered_map<int, std::string> responses;
-	std::unordered_map<int, std::string> requests;
+	//add listener to the vector
+	pollfd listener;
+	listener.fd = _listener_fd;
+	listener.events = POLLIN;
+	_pfds.push_back(listener);
+	_fd_count = 1;
 
 	std::cout << "Server: waiting for connections.." << std::endl;
 	while (1)
 	{
-		int poll_count = poll(pfds.data(), sockfd_count, -1);
+		int poll_count = poll(_pfds.data(), _fd_count, -1);
 		if (poll_count == -1)
 			throw std::runtime_error("poll failed");
-		process_connections(&sockfd_count, &sockfd_size, &pfds);
+		process_connections();
 	}
 }
+
+Server::~Server() {}
