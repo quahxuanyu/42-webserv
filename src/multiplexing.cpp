@@ -4,7 +4,7 @@
 #include <netdb.h> // addrinfo 
 #include <cstring>
 #include <unistd.h>
-#include "include/Server.hpp"
+#include "../include/Server.hpp"
 
 #define BLACK     "\033[0;30m"
 #define RED       "\033[0;31m"
