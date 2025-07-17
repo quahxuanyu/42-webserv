@@ -24,6 +24,7 @@ class Request {
 		const std::string &getUri() const;
 		const std::string &getVersion() const;
 		const std::map<std::string, std::string> &getHeaders() const;
+		void printRequest() const;
 
 };
 
