@@ -1,23 +1,32 @@
-SRC = multiplexing.cpp src/Client.cpp src/Server.cpp src/Request.cpp src/Response.cpp
-OBJ = $(SRC:.cpp=.o)
+CXX = g++
+CXX_FLAGS = -Wall -Wextra -Werror -std=c++98
 
-CC = g++
-CFLAGS = -Wall -Wextra -Werror -std=c++98
-TARGET = server
+SRC_DIR = src
+# Use find to locate all .cpp files in src and its subdirectories
+SRC = $(shell find $(SRC_DIR) -type f -name '*.cpp')
 
+OBJS_DIR = objs
+# Replace src/ with objs/ and .cpp with .o for object files
+OBJS = $(patsubst $(SRC_DIR)/%.cpp, $(OBJS_DIR)/%.o, $(SRC))
+
+# Target executable
+TARGET = webserv
+
+# Rules
 all: $(TARGET)
 
-$(TARGET): $(OBJ)
-	$(CC) $(CFLAGS) $(OBJ) -o $(TARGET)
+$(TARGET): $(OBJS)
+	$(CXX) $(CXX_FLAGS) -o $(TARGET) $(OBJS)
 
-%.o: %.cpp
-	$(CC) $(CFLAGS) -c $< -o $@
+$(OBJS_DIR)/%.o: $(SRC_DIR)/%.cpp
+	@mkdir -p $(dir $@) # Create subdirectories in objs/ as needed
+	$(CXX) $(CXX_FLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJ)
+	rm -rf $(OBJS_DIR)
 
 fclean: clean
-	rm -f $(TARGET)
+	rm -rf $(TARGET)
 
 re: fclean all
 

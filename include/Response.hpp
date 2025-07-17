@@ -11,6 +11,7 @@ class Response {
 		std::map<std::string, std::string> _headers;
 		std::string _body;
 	public:
+		Response();
 		Response(std::string version, int statusCode, std::string statusMessage);
 		~Response();
 
@@ -25,6 +26,7 @@ class Response {
 		const std::string &getStatusMessage() const;
 		const std::map<std::string, std::string> &getHeaders() const;
 		const std::string &getBody() const;
+		std::string toString() const;
 };
 
 #endif
