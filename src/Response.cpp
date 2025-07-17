@@ -1,4 +1,3 @@
-#include "../include/Response.hpp"
 #include "../include/webserv.hpp"
 
 Response::Response() {}
