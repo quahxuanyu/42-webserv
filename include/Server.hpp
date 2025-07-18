@@ -5,14 +5,15 @@
 #include <vector>
 #include <poll.h>
 #include "Client.hpp"
+#include "Location.hpp"
 
 class Server {
 	private:
 		int _listener_fd;  //listener's socket fd
 		std::string _IP;  //IP to bind
 		std::string _port;	//port listening to
-		//std::vector<location> locations;  //location configs
 		std::string server_name; 
+		std::vector<Location> _locations;  //location configs
 		std::map<int, Client> _clients;   //map of {fd : client}
 		std::string _root;	//server root dir (from config file)
 		//int _body_len;	//content length (from header)

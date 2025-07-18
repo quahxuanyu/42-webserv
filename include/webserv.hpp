@@ -16,6 +16,7 @@
 #include "Response.hpp"
 #include "Server.hpp"
 #include "Client.hpp"
+#include "Location.hpp"
 
 #include <unistd.h>
 #include <sys/types.h>
