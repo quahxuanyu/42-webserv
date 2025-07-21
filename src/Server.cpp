@@ -12,6 +12,26 @@ Server::Server(std::string IP, std::string port) : _IP(IP), _port(port), _fd_cou
 	std::cout << "Server (localhost, port 8080) created: " << _listener_fd << std::endl;
 }
 
+void Server::setServerName(std::string server_name)
+{
+	_server_name = server_name;
+}
+
+void Server::setRoot(std::string root)
+{
+	_root = root;
+}
+
+void Server::setBodySize(long size)
+{
+	_body_size = size;
+}
+
+void Server::setErrorPage(int status, std::string page)
+{
+	_error_pages[status] = page;
+}
+
 
 void Server::get_listener_socket()
 {
