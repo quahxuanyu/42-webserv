@@ -8,6 +8,8 @@
 #include <sstream>
 #include <iostream>
 #include <vector>
+#include <map>
+#include <stack>
 #include <poll.h>
 #include <netdb.h> // addrinfo 
 #include <cstring>
@@ -17,8 +19,8 @@
 #include "Server.hpp"
 #include "Client.hpp"
 #include "Location.hpp"
+#include "Exception.hpp"
 
-#include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 

@@ -13,15 +13,13 @@ class Server {
 		std::string _IP;  //IP to bind
 		std::string _port;	//port listening to
 		std::string _server_name; 
-		std::map<int, std::string> _error_pages;
-		std::vector<Location> _locations;  //location configs
-		std::map<int, Client> _clients;   //map of {fd : client}
 		std::string _root;	//server root dir (from config file)
 		int _body_size;	//content length (from header)
+		std::map<int, std::string> _error_pages;
+		std::vector<Location> _locations;  //location configs
 		std::vector<pollfd> _pfds;  //list of fd the poll is watching
-
+		std::map<int, Client> _clients;   //map of {fd : client}
 		int _fd_count;
-
 
 		void get_listener_socket(void);
 		void process_connections();
@@ -39,6 +37,9 @@ class Server {
 		void setRoot(std::string root);
 		void setBodySize(long size);
 		void setErrorPage(int status, std::string page);
+		void addLocation(Location location);
+
+		void printInfo() const;
 		void multiplexing(void);
 		~Server();
 };

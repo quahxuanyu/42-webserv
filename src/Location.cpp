@@ -2,7 +2,10 @@
 
 Location::Location()
 {
-	std::cout << "Location deafult consturctor called" << std::endl;
+	std::cout << "Location default constructor called" << std::endl;
+	_redirect_code = 0;
+	_autoindex = 0;
+	_cgi = 0;
 }
 
 void Location::setPath(std::string path)
@@ -49,4 +52,23 @@ void Location::setRedirectUrl(std::string url)
 void Location::setCGI(int on)
 {
 	_cgi = on;
+}
+
+void Location::printInfo() const
+{
+	std::cout << "=== Location's info ===" << std::endl;
+	std::cout << "Path : " << _path << std::endl;
+	std::cout << "Root : " << _root << std::endl;
+	std::cout << "Alias : " << _alias << std::endl;
+	std::cout << "Index : " << _index << std::endl;
+	std::cout << "CGI : " << _cgi << std::endl;
+	std::cout << "AutoIndex : " << _autoindex << std::endl;
+	std::cout << "Redirect Code : " << _redirect_code << std::endl;
+	std::cout << "Redirect Url : " << _redirect_url << std::endl;
+	std::cout << "Methods : " << std::endl;
+
+	std::set<std::string>::const_iterator it;
+	for (it = _methods.begin(); it != _methods.end(); ++it)
+		std::cout << *it << std::endl;
+
 }

@@ -14,11 +14,9 @@ class Location {
 
 		bool _autoindex;
 		bool _cgi;
-		bool _redirect;
-
+		//bool _redirect;
 		std::set<std::string> _methods;
 		std::string _redirect_url;
-
 		size_t _redirect_code;
 
 	public:
@@ -33,6 +31,7 @@ class Location {
 		void setRedirectUrl(std::string url);
 		void setCGI(int on);
 
+		void printInfo() const;
 
 		
 

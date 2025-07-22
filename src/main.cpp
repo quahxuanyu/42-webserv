@@ -30,9 +30,67 @@ void print_request(Request &request) {
 // 	// execute("./cgi-bin/test.cgi", env);
 // }
 
-void checkTokens(std::vector<std::string> tokens)
+Location parseLocation(std::vector<std::string> tokens, size_t *i)
+{
+	Location location;
+	location.setPath(tokens[*i + 1]);
+	*i += 3;
+	while (*i < tokens.size() && tokens[*i] != "}")
+	{
+		if (tokens[*i] == "index")
+		{
+			location.setIndex(tokens[*i + 1]);
+			*i += 2;
+		}
+		else if (tokens[*i] == "autoindex")
+		{
+			if (tokens[*i + 1] ==  "on")
+				location.setAutoIndex(1);
+			else if (tokens[*i + 1] ==  "off")
+				location.setAutoIndex(0);
+			*i += 2;
+		}
+		else if (tokens[*i] == "root")
+		{
+			location.setRoot(tokens[*i + 1]);
+			*i += 2;
+		}
+		else if (tokens[*i] == "methods")
+		{
+			size_t j = *i;
+			while (++j < tokens.size() && tokens[j] != ";")
+			{
+				if (tokens[j] == "GET" || tokens[j] == "POST" || tokens[j] == "DELETE")
+					location.setMethod(tokens[j]);
+			}
+			*i = j + 1;
+		}
+		else if (tokens[*i] == "return")
+		{
+			location.setRedirectCode(atoi(tokens[*i + 1].c_str()));
+			location.setRedirectUrl(tokens[*i + 2]);
+			*i += 4;
+		}
+		else if (tokens[*i] == "cgi")
+		{
+			if (tokens[*i + 1] ==  "on")
+				location.setCGI(1);
+			else if (tokens[*i + 1] ==  "off")
+				location.setCGI(0);
+			*i += 2;
+		}
+		else
+			(*i)++;
+	}
+	(*i)++;
+	return location;
+}
+
+std::vector<Server> parseServer(std::vector<std::string> tokens)
 {
 	size_t i = 0;
+	std::vector<Server> servers;
+
 	while (i < tokens.size())
 	{
 		if ((tokens[i] == "server") && (tokens[i + 1] == "{"))
@@ -43,9 +101,9 @@ void checkTokens(std::vector<std::string> tokens)
 			{
 				if (tokens[i] == "listen")
 				{
-					size_t colon = tokens[i].find(':');
-					std::string IP = tokens[i].substr(0, colon);
-					std::string port = tokens[i].substr(colon);
+					size_t colon = tokens[i + 1].find(':');
+					std::string IP = tokens[i + 1].substr(0, colon);
+					std::string port = tokens[i + 1].substr(colon + 1);
 					server_1 = Server(IP, port);
 					i += 3;
 				}
@@ -71,58 +129,94 @@ void checkTokens(std::vector<std::string> tokens)
 				}
 				else if (tokens[i] == "location")
 				{
-					Location location;
-					location.setPath(tokens[i + 1]);
-					i += 3;
-					while (i < tokens.size() && tokens[i] != "}")
-					{
-						if (tokens[i] == "index")
-						{
-							location.setIndex(tokens[i + 1]);
-							i += 2;
-						}
-						if (tokens[i] == "autoindex")
-						{
-							if (tokens[i + 1] ==  "on")
-								location.setAutoIndex(1);
-							else if (tokens[i + 1] ==  "off")
-								location.setAutoIndex(0);
-							i += 2;
-						}
-						if (tokens[i] == "root")
-						{
-							location.setRoot(tokens[i + 1]);
-							i += 2;
-						}
-						if (tokens[i] == "methods")
-						{
-							size_t j = i;
-							while (++j < tokens.size() && tokens[j] != ";")
-							{
-								if (tokens[j] == "GET" || tokens[j] == "POST" || tokens[j] == "DELETE")
-									location.setMethod(tokens[j]);
-							}
-							i += 2;
-						}
-						if (tokens[i] == "return")
-						{
-							location.setRedirectCode(atoi(tokens[i + 1].c_str()));
-							location.setRedirectUrl(tokens[i + 2]);
-						}
-						if (tokens[i] == "cgi")
-						{
-							if (tokens[i + 1] ==  "on")
-								location.setCGI(1);
-							else if (tokens[i + 1] ==  "off")
-								location.setCGI(0);
-							i += 2;
-						}
-
-					}
+					Location location = parseLocation(tokens, &i);
+					server_1.addLocation(location);
 				}
+				else
+					i++;
 			}
+			servers.push_back(server_1);
+			i++;
 		}
 	}
+	return (servers);
+}
+
+void checkSemicolons(std::vector<std::string> tokens)
+{
+	size_t i = 0;
+	while (i < tokens.size() && tokens[i] != "{")
+		i++;
+	while (i < tokens.size() && tokens[i] != "}")
+	{
+		
+		i++;
+	}
+}
+
+void checkDirectives(std::vector<std::string> tokens)
+{
+	std::stack<std::string> stack;
+	std::string prev_token;
+	for (size_t i = 0; i < tokens.size(); i++)
+	{
+		if (tokens[i] == "server")
+		{	
+			if (!stack.empty())
+				throw SyntaxError("server block must be at top-level");
+			stack.push(tokens[i]);
+			if (tokens[i + 1] != "{")
+				throw SyntaxError("server block must be in '{}'");
+		}
+		else if (tokens[i] == "location")
+		{
+			if (stack.empty() || stack.top() != "server")
+				throw SyntaxError("location block must be inside server block");
+			stack.push(tokens[i]);
+			if (tokens[i + 1][0] != '/' )
+				throw SyntaxError("location block must be given URI");
+			if (tokens[i + 2] != "{")
+				throw SyntaxError("location block must be in '{}'");	
+		}
+		else if (tokens[i] == "{")
+		{
+			if (!(prev_token == "server" || prev_token == "location")) 
+				throw SyntaxError("'{' must follow server or location block");
+		} 
+		else if  (tokens[i] == "}")
+		{
+			if (stack.empty())
+				throw SyntaxError("Unexpected '}'");
+			stack.pop();
+		}
+		prev_token = tokens[i];
+	}
+	if (!stack.empty())
+		throw SyntaxError("Unmatched '{'");
+}
+
+void checkBraces(std::vector<std::string> tokens)
+{
+	std::stack<std::string> stack;
+	for (size_t i = 0; i < tokens.size(); i++)
+	{
+		if (tokens[i] == "{") 
+			stack.push(tokens[i]);
+		else if (tokens[i] == "}")
+		{	if (stack.empty())
+				throw SyntaxError("Unmatched closing brace");
+			stack.pop();}
+	}
+	if (!stack.empty())
+		throw SyntaxError("Unclosed brace");
+}
+
+void checkTokens(std::vector<std::string> tokens)
+{
+	checkBraces(tokens);
+	checkDirectives(tokens);
+	checkSemicolons(tokens);
+
 }
 
 void tokenise(std::string content)
@@ -150,7 +244,23 @@ void tokenise(std::string content)
 	}
 	for (size_t i = 0; i < tokens.size(); i++)
 		std::cout << tokens[i] << std::endl;
-	checkTokens(tokens);
+	try
+	{
+		checkTokens(tokens);
+		std::vector<Server> servers = parseServer(tokens);
+		for (size_t i = 0; i < servers.size(); i++)
+			servers[i].printInfo();
+	}
+	catch (SyntaxError &e)
+	{
+		std::cerr << "Config file syntax error: " << e.what() << std::endl;
+		exit(1);
+	}
+	catch (ParseException &e)
+	{
+		std::cerr << "Config file parsing error: " << e.what() << std::endl;
+		exit(1);
+	}
 }
 
 void parseConfigFile(char *file)
