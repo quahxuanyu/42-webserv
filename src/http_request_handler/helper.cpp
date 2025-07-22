@@ -40,3 +40,17 @@ std::string find_mime(std::string uri) {
         return "application/octet-stream"; // Default MIME type
     }
 }
+
+/**
+ * @brief Sets the headers for the response based on the request and response status.
+ */
+void set_headers(Response &response, Request &request)
+{
+	if (response.getStatusCode() == 200)
+		response.addHeader("Connection", "keep-alive");
+	else
+		response.addHeader("Connection", "close");
+	response.addHeader("Content-Type", find_mime(request.getUri()));
+	response.addHeader("Date", get_current_time());
+	response.addHeader("Server", "Webserv/1.0"); // ** TEMPORARY, wait until config file is implemented **
+}

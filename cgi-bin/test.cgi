@@ -2,5 +2,5 @@
 
 import os
 
-print("CGI Script Executed Successfully!")
-print("ASDOAJSOIDPIASJD:OIJAPSJDOA")
+for key, value in os.environ.items():
+    print(f"{key}: {value}")

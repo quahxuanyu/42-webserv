@@ -47,20 +47,7 @@ void process_request(Response &response, Request &request) {
     response.setStatusMessage("OK");
 }
 
-/**
- * @brief Sets the headers for the response based on the request and response status.
- */
-void set_headers(Response &response, Request &request) {
-    if (response.getStatusCode() == 200)
-        response.addHeader("Connection", "keep-alive");
-    else
-        response.addHeader("Connection", "close");
-    response.addHeader("Content-Type", find_mime(request.getUri()));
-    response.addHeader("Date", get_current_time());
-    response.addHeader("Server", "Webserv/1.0"); // ** TEMPORARY, wait until config file is implemented **
-}
-
-Response &handle_get_response(Request &request) {
+Response &handle_get_request(Request &request) {
     // Create a response object
     Response *response = new Response();
     response->setVersion(request.getVersion()); // set the version (always HTTP/1.1)
