@@ -67,7 +67,7 @@ Location parseLocation(std::vector<std::string> tokens, size_t *i)
 		}
 		else if (tokens[*i] == "return")
 		{
-			location.setRedirectCode(atoi(tokens[*i + 1].c_str()));
+			location.setRedirectCode(strtol(tokens[*i + 1].c_str(), NULL, 10));
 			location.setRedirectUrl(tokens[*i + 2]);
 			*i += 4;
 		}
@@ -124,7 +124,7 @@ std::vector<Server> parseServer(std::vector<std::string> tokens)
 				}
 				else if (tokens[i] == "error_page")
 				{
-					server_1.setErrorPage(atoi(tokens[i + 1].c_str()), tokens[i + 2]);
+					server_1.setErrorPage(strtol(tokens[i + 1].c_str(), NULL, 10), tokens[i + 2]);
 					i += 4; 
 				}
 				else if (tokens[i] == "location")
@@ -142,15 +142,43 @@ std::vector<Server> parseServer(std::vector<std::string> tokens)
 	return (servers);
 }
 
+bool isDirective(std::string keyword)
+{
+	if (keyword == "listen" || keyword == "server_name" || keyword == "root" || keyword == "error_page" 
+	|| keyword == "client_max_body_size" || keyword == "index" || keyword == "methods" || keyword == "return" 
+	|| keyword == "cgi" || keyword == "autoindex")
+		return true;
+	else 
+		return false;
+}
+
 void checkSemicolons(std::vector<std::string> tokens)
 {
 	size_t i = 0;
-	while (i < tokens.size() && tokens[i] != "{")
-		i++;
-	while (i < tokens.size() && tokens[i] != "}")
+	while (i < tokens.size())
 	{
-		
-		i++;
+		if (tokens[i] == "server")
+			i += 2;
+		else if (tokens[i] == "location")
+			i += 3;
+		else if (isDirective(tokens[i]))
+		{
+			std::string directive = tokens[i];
+			i++;
+
+			//stop if reach ';' // else raise error 
+			while (!(i >= tokens.size() || tokens[i] == ";" || tokens[i] == "{" || tokens[i] == "}" || isDirective(tokens[i])
+			|| tokens[i] == "server" || tokens[i] == "location"))
+				i++;
+			if (i >= tokens.size() || tokens[i] != ";")
+				throw SyntaxError("Missing ';' after " + directive);
+
+			i++; //skip semicolon
+		}
+		else if (tokens[i] == "{" || tokens[i] == "}")
+			i++;
+		else
+			throw SyntaxError("Unknown keyword : " + tokens[i]);
 	}
 }
 
@@ -158,6 +186,7 @@ void checkDirectives(std::vector<std::string> tokens)
 {
 	std::stack<std::string> stack;
 	std::string prev_token;
+	std::string prev2_token;
 	for (size_t i = 0; i < tokens.size(); i++)
 	{
 		if (tokens[i] == "server")
@@ -180,7 +209,7 @@ void checkDirectives(std::vector<std::string> tokens)
 		}
 		else if (tokens[i] == "{")
 		{
-			if (!(prev_token == "server" || prev_token == "location")) 
+			if (!(prev_token == "server" || (prev2_token == "location" && prev_token[0] == '/'))) 
 				throw SyntaxError("'{' must follow server or location block");
 		} 
 		else if  (tokens[i] == "}")
@@ -189,6 +218,7 @@ void checkDirectives(std::vector<std::string> tokens)
 				throw SyntaxError("Unexpected '}'");
 			stack.pop();
 		}
+		prev2_token = prev_token;
 		prev_token = tokens[i];
 	}
 	if (!stack.empty())
@@ -208,14 +238,18 @@ void checkBraces(std::vector<std::string> tokens)
 			stack.pop();}
 	}
 	if (!stack.empty())
-		throw SyntaxError("Unclosed brace");
+		throw SyntaxError("Unclosed opening brace");
 }
 
 void checkTokens(std::vector<std::string> tokens)
 {
+	//check for balance of '{}'
 	checkBraces(tokens);
+	// check if server and location followed by {, server comes before location
 	checkDirectives(tokens);
+
 	checkSemicolons(tokens);
+	
 
 }
 
@@ -223,13 +257,11 @@ void tokenise(std::string content)
 {
 	std::vector<std::string> tokens;
 	size_t i = 0;
+	std::cout << content << std::endl;
 	while (i < content.length())
 	{
 		if (content[i] == ' ')
-		{	
 			i++;
-			continue;
-		}
 		else if (content[i] == '{' || content[i] == '}' || content[i] == ';')
 			tokens.push_back(std::string(1, content[i++]));
 		else if (isascii(content[i]))
@@ -243,23 +275,24 @@ void tokenise(std::string content)
 		}
 	}
 	for (size_t i = 0; i < tokens.size(); i++)
-		std::cout << tokens[i] << std::endl;
+		std::cout << "token [" << i << "] : "<<tokens[i] << std::endl;
 	try
 	{
 		checkTokens(tokens);
-		std::vector<Server> servers = parseServer(tokens);
-		for (size_t i = 0; i < servers.size(); i++)
-			servers[i].printInfo();
+		// std::vector<Server> servers = parseServer(tokens);
+		// for (size_t i = 0; i < servers.size(); i++)
+		// 	servers[i].printInfo();
+		std::cout << GREEN << "No issue!" << RESET << std::endl;
 	}
 	catch (SyntaxError &e)
 	{
-		std::cerr << "Config file syntax error: " << e.what() << std::endl;
-		exit(1);
+		std::cerr << RED << "Config file " << e.what() << RESET << std::endl;
+		_exit(1);
 	}
 	catch (ParseException &e)
 	{
-		std::cerr << "Config file parsing error: " << e.what() << std::endl;
-		exit(1);
+		std::cerr << RED << "Config file parsing error: " << e.what() << RESET << std::endl;
+		_exit(1);
 	}
 }
 
@@ -279,6 +312,7 @@ void parseConfigFile(char *file)
 			if (comment == std::string::npos)
 				comment = line.length();
 			content += line.substr(start, comment - start);
+			content += " ";
 		}
 	}
 	tokenise(content); 

@@ -14,6 +14,8 @@
 #include <netdb.h> // addrinfo 
 #include <cstring>
 #include <unistd.h>
+#include <cstdlib>
+
 #include "Request.hpp"
 #include "Response.hpp"
 #include "Server.hpp"

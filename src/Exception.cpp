@@ -12,4 +12,4 @@ const char* ParseException::what() const throw()
 
 ParseException::~ParseException() throw (){}
 
-explicit SyntaxError::SyntaxError(const std::string &msg) : std::runtime_error("Syntax Error: " + msg) {}
+SyntaxError::SyntaxError(const std::string &msg) : std::runtime_error("Syntax Error: " + msg) {}
