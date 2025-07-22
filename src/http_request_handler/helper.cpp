@@ -26,19 +26,20 @@ std::string get_current_time() {
  */
 std::string find_mime(std::string uri) {
     // For simplicity, we will return a hardcoded MIME type based on the file extension
-    if (uri.find(".html") != std::string::npos || uri == "/") {
+    if (uri.find(".html") != std::string::npos || uri == "/")
         return "text/html";
-    } else if (uri.find(".css") != std::string::npos) {
+    else if (uri.find(".css") != std::string::npos)
         return "text/css";
-    } else if (uri.find(".js") != std::string::npos) {
+    else if (uri.find(".js") != std::string::npos) 
         return "application/javascript";
-    } else if (uri.find(".png") != std::string::npos) {
+    else if (uri.find(".png") != std::string::npos)
         return "image/png";
-    } else if (uri.find(".jpg") != std::string::npos || uri.find(".jpeg") != std::string::npos) {
+    else if (uri.find(".jpg") != std::string::npos || uri.find(".jpeg") != std::string::npos)
         return "image/jpeg";
-    } else {
+    else if (uri.find(".cgi") != std::string::npos)
+        return "text/plain"; // Assuming CGI scripts return plain text
+    else
         return "application/octet-stream"; // Default MIME type
-    }
 }
 
 /**
@@ -50,6 +51,7 @@ void set_headers(Response &response, Request &request)
 		response.addHeader("Connection", "keep-alive");
 	else
 		response.addHeader("Connection", "close");
+    response.addHeader("Content-Length", to_string(response.getBody().length()));
 	response.addHeader("Content-Type", find_mime(request.getUri()));
 	response.addHeader("Date", get_current_time());
 	response.addHeader("Server", "Webserv/1.0"); // ** TEMPORARY, wait until config file is implemented **

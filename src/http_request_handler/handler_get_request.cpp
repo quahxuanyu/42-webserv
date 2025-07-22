@@ -41,7 +41,7 @@ void process_request(Response &response, Request &request) {
     }
     file_content = read_file(src);
     src.close();
-    response.addHeader("Content-Length", to_string(file_content.length()));
+    // response.addHeader("Content-Length", to_string(file_content.length()));
     response.setBody(file_content);
     response.setStatusCode(200);
     response.setStatusMessage("OK");

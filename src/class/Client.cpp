@@ -1,4 +1,5 @@
-#include "../include/Client.hpp"
+#include "../../include/Client.hpp"
+#include "../../include/webserv.hpp"
 #include <sstream>
 
 Client::Client() {}

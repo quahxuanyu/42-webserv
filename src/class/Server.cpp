@@ -1,11 +1,11 @@
-#include "../include/Server.hpp"
+#include "../../include/Server.hpp"
 #include <iostream>
 #include <vector>
 #include <poll.h>
 #include <netdb.h> // addrinfo 
 #include <cstring>
 #include <unistd.h>
-#include "../include/Client.hpp"
+#include "../../include/Client.hpp"
 
 Server::Server()
 {
