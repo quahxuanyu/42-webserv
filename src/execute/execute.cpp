@@ -18,7 +18,7 @@ std::string execute(Request &request, char **env) {
     }
     else
     {
-		write(pipefd[1], request.getBody().c_str(), request.getBody().length()); // Example input to CGI
+		write(pipefd[1], request.getBody().c_str(), request.getBody().length());
 		close(pipefd[1]);
 		char buffer[1024];
 	

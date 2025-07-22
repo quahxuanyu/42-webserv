@@ -48,6 +48,8 @@ void process_request(Response &response, Request &request) {
 }
 
 Response &handle_get_request(Request &request) {
+    // **Check if its a CGI request**
+    
     // Create a response object
     Response *response = new Response();
     response->setVersion(request.getVersion()); // set the version (always HTTP/1.1)
