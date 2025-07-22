@@ -52,7 +52,7 @@ void set_headers(Response &response, Request &request)
 	else
 		response.addHeader("Connection", "close");
     response.addHeader("Content-Length", to_string(response.getBody().length()));
-	response.addHeader("Content-Type", find_mime(request.getUri()));
+	response.addHeader("Content-Type", find_mime(request.getUri())); //**Might not be 100% correct */
 	response.addHeader("Date", get_current_time());
 	response.addHeader("Server", "Webserv/1.0"); // ** TEMPORARY, wait until config file is implemented **
 }

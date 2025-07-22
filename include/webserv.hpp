@@ -6,6 +6,7 @@
 #include <iostream>
 #include <ctime>
 #include <sstream>
+#include <vector>
 #include "Request.hpp"
 #include "Response.hpp"
 
@@ -26,5 +27,9 @@ void set_headers(Response &response, Request &request);
 
 //EXECUTE.CPP
 std::string execute(Request &request, char **env);
+std::string cgi(Request &request);
 
+// CGI_HELPER.CPP
+std::string get_content_type(const std::string &cgi_output); // Extracts the Content
+std::string get_body(const std::string &cgi_output); // Extracts the body from
 #endif

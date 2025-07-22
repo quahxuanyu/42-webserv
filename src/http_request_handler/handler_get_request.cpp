@@ -49,15 +49,33 @@ void process_request(Response &response, Request &request) {
 
 Response &handle_get_request(Request &request) {
     // **Check if its a CGI request**
-    
-    // Create a response object
-    Response *response = new Response();
-    response->setVersion(request.getVersion()); // set the version (always HTTP/1.1)
+	if (request.getUri().find(".cgi") != std::string::npos) {
+		// If it is a CGI request, execute the CGI script
+		std::string cgi_response = cgi(request);
 
-    // Set the body of the response
-    process_request(*response, request);
-
-    // Set the headers of the response
-    set_headers(*response, request);
-    return *response;
+		if (cgi_response.find("Error") != std::string::npos) {
+			// If CGI execution failed, return an error response
+			Response *error_response = new Response("HTTP/1.1", 500, "Internal Server Error");
+			error_response->setBody("CGI execution failed.");
+			return *error_response;
+		}
+		else {
+			Response *response = new Response("HTTP/1.1", 200, "OK");
+			response->setBody(get_body(cgi_response)); // Extract body from CGI output
+			response->addHeader("Connection", "keep-alive");
+			response->addHeader("Content-Length", to_string(response->getBody().length()));
+			response->addHeader("Content-Type", get_content_type(cgi_response)); // Extract content type from CGI output
+			response->addHeader("Date", get_current_time());
+			response->addHeader("Server", "Webserv/1.0"); // ** TEMPORARY, wait until config file is implemented **
+			return *response;
+		}
+	}
+	else {
+		// Create a response object
+		Response *response = new Response();
+		response->setVersion(request.getVersion());
+		process_request(*response, request);
+		set_headers(*response, request);
+		return *response;
+	}
 }
