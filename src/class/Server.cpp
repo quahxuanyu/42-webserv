@@ -1,24 +1,60 @@
-#include "../../include/Server.hpp"
-#include <iostream>
-#include <vector>
-#include <poll.h>
-#include <netdb.h> // addrinfo 
-#include <cstring>
-#include <unistd.h>
-#include "../../include/Client.hpp"
+#include "../../include/webserv.hpp"
 
 Server::Server()
 {
 	//get_listener_socket();
-	std::cout << "default conatructor called" << _port << std::endl;
+	std::cout << "Server default constructor called" << _port << std::endl;
 }
 
 Server::Server(std::string IP, std::string port) : _IP(IP), _port(port), _fd_count(0)
 {
 	get_listener_socket();
-	std::cout << "Server (localhost, port 8080) created: " << _listener_fd << std::endl;
+	std::cout << "Server (" << _IP << " " << _port << ") created, fd: " << _listener_fd << std::endl;
 }
 
+void Server::setServerName(std::string server_name)
+{
+	_server_name = server_name;
+}
+
+void Server::setRoot(std::string root)
+{
+	_root = root;
+}
+
+void Server::setBodySize(long size)
+{
+	_body_size = size;
+}
+
+void Server::setErrorPage(int status, std::string page)
+{
+	_error_pages[status] = page;
+}
+
+void Server::addLocation(Location location)
+{
+	_locations.push_back(location);
+}
+
+void Server::printInfo() const
+{
+	std::cout << "=== Server's Info ===" << std::endl;
+	std::cout << "Server's name : " << _server_name << std::endl;
+	std::cout << "Ip address : " << _IP << std::endl;
+	std::cout << "Port number : " << _port << std::endl;
+	std::cout << "Root : " << _root << std::endl;
+	std::cout << "Body size : " << _body_size << std::endl;
+	std::cout << "Error pages :" << std::endl;
+
+	std::map<int, std::string>::const_iterator it;
+	for (it = _error_pages.begin(); it != _error_pages.end(); ++it)
+		std::cout << it->first<< " : " << it->second << std::endl;
+
+	std::cout << "Locations :" << std::endl;
+	for (size_t i = 0; i < _locations.size(); i++)
+		_locations[i].printInfo();
+}
 
 void Server::get_listener_socket()
 {
@@ -35,7 +71,7 @@ void Server::get_listener_socket()
 	hints.ai_socktype = SOCK_STREAM; //TCP
 	hints.ai_flags = AI_PASSIVE; // bind with local address
 
-	status = getaddrinfo(NULL, "8080", &hints, &ai);   // might change
+	status = getaddrinfo(_IP.c_str(), _port.c_str() , &hints, &ai);   // might change
 	if (status)
 		throw std::runtime_error("getaddrinfo failed: " + std::string(gai_strerror(status)));
 	
@@ -152,9 +188,6 @@ void Server::process_connections()
 
 void Server::multiplexing()
 {
-	//get a listener socket for a port & IP
-	
-
 	//add listener to the vector
 	pollfd listener;
 	listener.fd = _listener_fd;

@@ -1,4 +1,4 @@
-#include "../../include/Request.hpp"
+#include "../../include/webserv.hpp"
 
 Request::Request() {}
 
@@ -57,4 +57,20 @@ const std::string &Request::getHeader(std::string key) const {
 
 const std::string &Request::getBody() const {
 	return _body;
+}
+
+void Request::printRequest() const
+{
+	std::cout << " == REQUEST == " << std::endl;
+	std::cout << "Method : " << getMethod() << std::endl;
+	std::cout << "URI : " << getUri() << std::endl;
+	std::cout << "Version : " << getVersion() << std::endl;
+	std::cout << "Headers : " << std::endl;
+
+	std::map<std::string, std::string>::const_iterator it;
+	for (it = _headers.begin(); it != _headers.end(); ++it)
+	{
+		std::cout << it->first<< " : " << it->second << std::endl;
+	}
+	
 }
