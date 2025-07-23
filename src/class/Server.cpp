@@ -3,6 +3,7 @@
 Server::Server()
 {
 	//get_listener_socket();
+	get_listener_socket();
 	std::cout << "Server default constructor called" << _port << std::endl;
 }
 
@@ -180,7 +181,9 @@ void Server::process_connections()
 		else if ((_pfds)[i].revents & POLLHUP)
 			close_connection(i);
 		else if ((_pfds)[i].revents & POLLIN)
-			handle_client_read(i);
+		{	
+			std::cout << RED << "recv smtg from client" << RESET <<  std::endl;
+			handle_client_read(i);}
 		else if ((_pfds)[i].revents & POLLOUT)
 			handle_client_write(i);
 	}

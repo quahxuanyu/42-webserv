@@ -72,5 +72,6 @@ void Request::printRequest() const
 	{
 		std::cout << it->first<< " : " << it->second << std::endl;
 	}
+	std::cout << "Body : "<< getBody() << std::endl;
 	
 }

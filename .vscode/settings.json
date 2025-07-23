@@ -65,6 +65,14 @@
 		"execution": "cpp",
 		"ratio": "cpp",
 		"stack": "cpp",
-		"variant": "cpp"
+		"variant": "cpp",
+		"chrono": "cpp",
+		"codecvt": "cpp",
+		"set": "cpp",
+		"fstream": "cpp",
+		"iomanip": "cpp",
+		"stop_token": "cpp",
+		"thread": "cpp",
+		"semaphore": "cpp"
 	}
 }

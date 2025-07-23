@@ -24,9 +24,9 @@ void process_request(Response &response, Request &request) {
 
     // ** TEMPORARY URI file path handling (need to wait for config file implementation) **
     if (uri == "/")
-        file_path = "html/sample.html";
+        file_path = "html/upload.html";
     else
-        file_path = "." + uri;
+        file_path = "." + uri; //wrong
 
     std::ifstream src(file_path.c_str(), std::ios::binary);
     if (!src) {
@@ -48,7 +48,18 @@ void process_request(Response &response, Request &request) {
 }
 
 Response &handle_get_request(Request &request) {
-    // **Check if its a CGI request**
+
+    //**CHECKING WITH THE LOCATION BLOCKS**/
+        // 1. See if match with any location block
+        // ---- check all directives
+        // - CGI
+        // - Redirect
+        // - Else: index, 
+        // - Else: autoindex, methods, root, alias
+        // - Else routing/redirection
+        // 2. Else, return error 404
+
+    // CGI DIRECTIVE
 	if (request.getUri().find(".cgi") != std::string::npos) {
 		// If it is a CGI request, execute the CGI script
 		std::string cgi_response = cgi(request);

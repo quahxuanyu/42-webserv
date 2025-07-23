@@ -22,6 +22,11 @@ void Client::parse_request()
 	request.setUri(uri);
 	request.setVersion(version);
 
+	size_t body_start = recv_buf.find("\r\n\r\n");
+	size_t content_length = atoi(request.getHeader("Content-Length").c_str());
+	std::string body = recv_buf.substr(body_start + 4, content_length);
+	request.setBody(body);
+
 	size_t line_start = line_end + 2;
 	while (1)
 	{
@@ -39,7 +44,7 @@ void Client::parse_request()
 
 		line_start = line_end + 2;
 	}
-	request.printRequest();
+	// request.printRequest();
 }
 
 bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
@@ -59,20 +64,44 @@ bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
 	}
 	else
 	{
-		recv_buf += std::string(buf);
-		std::cout << "[DEBUG] Current recv_buf content:\n" << recv_buf << std::endl;
-		if (recv_buf.find("\r\n\r\n") != std::string::npos)
+		recv_buf.append(buf, nbytes);
+		// recv_buf += std::string(buf);
+		// std::cout << "[DEBUG] Current recv_buf content:\n" << recv_buf << std::endl;
+		if (recv_buf.find("\r\n\r\n") != std::string::npos )
 		{
-			std::cout << "Server : recv from fd " << sender_fd << ": \n - REQUEST -\n" << BLUE << recv_buf << RESET << std::endl;
-		
+
+			// std::cout << "Server : recv from fd " << sender_fd << ": \n - REQUEST -\n" << BLUE << recv_buf << RESET << std::endl;
+
 			//generate response
 			parse_request();
-			response = generate_response(request);
-			send_buf = response.toString();
-			recv_buf.clear();
+			if (request.getMethod() == "POST")
+			{	
+				// std::cout << BLUE << "recv_data:" << recv_buf << RESET <<std::endl; 
+				size_t first_sep = recv_buf.find("\r\n\r\n");
+				std::string body = recv_buf.substr(first_sep + 4);
+				size_t content_length = atoi(request.getHeader("Content-Length").c_str());
+				// std::cout << BLUE << "receiving Data!" << RESET << std::endl;
 
-			//allow send()
-			(*pfds)[pfd_i].events |= POLLOUT;
+				if (body.length() >= content_length)
+				{
+					std::cout << GREEN << "Finished Receiving Data!" << RESET << std::endl;
+					response = generate_response(request);
+					send_buf = response.toString();
+					std::cout << "RESPONSE:\n" << send_buf << std::endl;
+					recv_buf.clear();
+					(*pfds)[pfd_i].events |= POLLOUT;
+				}
+				// std::cout << GREEN << "body length" <<body.length() << std::endl;
+				// std::cout << RED << "debug1 " << RESET << std::endl;
+			}
+			else
+			{
+				response = generate_response(request);
+				send_buf = response.toString();
+				recv_buf.clear();
+				//allow send()
+				(*pfds)[pfd_i].events |= POLLOUT;
+			}
 		}
 		return true;
 	}

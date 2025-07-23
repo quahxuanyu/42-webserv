@@ -10,55 +10,55 @@ void print_request(Request &request) {
 	}
 }
 
-int main(int argc, char *argv[])
-{
-	(void) argc;
-	(void) argv;
+// int main(int argc, char *argv[])
+// {
+// 	(void) argc;
+// 	(void) argv;
 
-	std::cout << "----------GET Request-----------" << std::endl;
-	Request GET_request("GET", "/", "HTTP/1.1");
-	GET_request.addHeader("Host", "localhost");
-	GET_request.addHeader("User-Agent", "WebClient/1.0");
-	print_request(GET_request);
+// 	std::cout << "----------GET Request-----------" << std::endl;
+// 	Request GET_request("GET", "/", "HTTP/1.1");
+// 	GET_request.addHeader("Host", "localhost");
+// 	GET_request.addHeader("User-Agent", "WebClient/1.0");
+// 	print_request(GET_request);
 
-	std::cout << "\n----------GET Response-----------" << std::endl;
-	Response &GET_response = generate_response(GET_request);
-	std::cout << GET_response.toString();
-	delete &GET_response;
+// 	std::cout << "\n----------GET Response-----------" << std::endl;
+// 	Response &GET_response = generate_response(GET_request);
+// 	std::cout << GET_response.toString();
+// 	delete &GET_response;
 
-	std::cout << "\n----------POST Request CGI: Uplaod HTML File-----------" << std::endl;
-	Request POST_request("POST", "cgi-bin/upload_file.cgi", "HTTP/1.1");
-	POST_request.addHeader("Host", "localhost");
-	POST_request.addHeader("User-Agent", "WebClient/1.0");
-	POST_request.addHeader("Content-Type", "multipart/form-data; boundary=---------------------------2858016734199026723269487220");
-	POST_request.setBody("-----------------------------2858016734199026723269487220\r\n"
-						"Content-Disposition: form-data; name=\"file\"; filename=\"test3.html\"\r\n"
-						"Content-Type: text/html\r\n\r\n"
-						"<html><body>TESTING TESTIING!!</body></html>\r\n"
-						"-----------------------------2858016734199026723269487220--\r\n");
-	POST_request.addHeader("Content-Length", to_string(POST_request.getBody().length()));
-	print_request(POST_request);
+// 	std::cout << "\n----------POST Request CGI: Uplaod HTML File-----------" << std::endl;
+// 	Request POST_request("POST", "cgi-bin/upload_file.cgi", "HTTP/1.1");
+// 	POST_request.addHeader("Host", "localhost");
+// 	POST_request.addHeader("User-Agent", "WebClient/1.0");
+// 	POST_request.addHeader("Content-Type", "multipart/form-data; boundary=---------------------------2858016734199026723269487220");
+// 	POST_request.setBody("-----------------------------2858016734199026723269487220\r\n"
+// 						"Content-Disposition: form-data; name=\"file\"; filename=\"test3.html\"\r\n"
+// 						"Content-Type: text/html\r\n\r\n"
+// 						"<html><body>TESTING TESTIING!!</body></html>\r\n"
+// 						"-----------------------------2858016734199026723269487220--\r\n");
+// 	POST_request.addHeader("Content-Length", to_string(POST_request.getBody().length()));
+// 	print_request(POST_request);
 
-	std::cout << "----------POST Response CGI-----------" << std::endl;
-	Response &POST_response = generate_response(POST_request);
-	std::cout << POST_response.toString();
-	delete &POST_response;
+// 	std::cout << "----------POST Response CGI-----------" << std::endl;
+// 	Response &POST_response = generate_response(POST_request);
+// 	std::cout << POST_response.toString();
+// 	delete &POST_response;
 
-	std::cout << "\n----------GET Request CGI: Get JSON Files-----------" << std::endl;
-	Request GET_request_cgi("GET", "cgi-bin/js_test.cgi", "HTTP/1.1");
-	GET_request_cgi.addHeader("Host", "localhost");
-	GET_request_cgi.addHeader("User-Agent", "WebClient/1.0");
-	print_request(GET_request_cgi);
+// 	std::cout << "\n----------GET Request CGI: Get JSON Files-----------" << std::endl;
+// 	Request GET_request_cgi("GET", "cgi-bin/js_test.cgi", "HTTP/1.1");
+// 	GET_request_cgi.addHeader("Host", "localhost");
+// 	GET_request_cgi.addHeader("User-Agent", "WebClient/1.0");
+// 	print_request(GET_request_cgi);
 
-	std::cout << "----------GET Response CGI-----------" << std::endl;
-	Response &GET_response_cgi = generate_response(GET_request_cgi);
-	std::cout << GET_response_cgi.toString();
-	delete &GET_response_cgi;
+// 	std::cout << "----------GET Response CGI-----------" << std::endl;
+// 	Response &GET_response_cgi = generate_response(GET_request_cgi);
+// 	std::cout << GET_response_cgi.toString();
+// 	delete &GET_response_cgi;
 	
-}
-// 	// std::cout << "----------CGI TEST-----------" << std::endl;
-// 	// execute("./cgi-bin/test.cgi", env);
 // }
+	// std::cout << "----------CGI TEST-----------" << std::endl;
+	// execute("./cgi-bin/test.cgi", env);
+
 
 Location parseLocation(std::vector<std::string> tokens, size_t *i)
 {
@@ -283,7 +283,7 @@ void checkTokens(std::vector<std::string> tokens)
 
 }
 
-void tokenise(std::string content)
+std::vector<Server> tokenise(std::string content)
 {
 	std::vector<std::string> tokens;
 	size_t i = 0;
@@ -309,10 +309,11 @@ void tokenise(std::string content)
 	try
 	{
 		checkTokens(tokens);
-		// std::vector<Server> servers = parseServer(tokens);
-		// for (size_t i = 0; i < servers.size(); i++)
-		// 	servers[i].printInfo();
+		std::vector<Server> servers = parseServer(tokens);
+		for (size_t i = 0; i < servers.size(); i++)
+			servers[i].printInfo();
 		std::cout << GREEN << "No issue!" << RESET << std::endl;
+		return (servers);
 	}
 	catch (SyntaxError &e)
 	{
@@ -324,9 +325,10 @@ void tokenise(std::string content)
 		std::cerr << RED << "Config file parsing error: " << e.what() << RESET << std::endl;
 		_exit(1);
 	}
+
 }
 
-void parseConfigFile(char *file)
+std::vector<Server> parseConfigFile(char *file)
 {
 	std::string content;
 	std::string line;
@@ -345,24 +347,40 @@ void parseConfigFile(char *file)
 			content += " ";
 		}
 	}
-	tokenise(content); 
-}
+	std::vector<Server> servers = tokenise(content); 
+	return (servers);
+	}
 
-// int main(int argc, char **argv)
-// {
-// 	if (argc != 2)
-// 		return (std::cout << "Incorrect number of arguments" << std::endl, 2);
-// 	parseConfigFile(argv[1]);
-//     // try 
-// 	// {
-//     //     Server server("0.0.0.0", "8080");
-//     //     server.multiplexing();  // Run forever
-//     // } 
-// 	// catch(const std::exception &e)
-// 	// {
-// 	// 	std::cerr << RED << "Server initialization failed: " << e.what() << RESET << std::endl;
-// 	// 	return 1;
-// 	// }
-// }
+int main(int argc, char **argv)
+{
+	(void)argc;
+	(void)argv;
+	// if (argc != 2)
+	// 	return (std::cout << "Incorrect number of arguments" << std::endl, 2);
+	std::vector<Server> servers = parseConfigFile(argv[1]);
+    try 
+	{
+		// for (size_t i = 0; i < servers.size(); i++)
+        // {
+		// 	Server server = servers[i]
+		// 	();
+       	// 	server.multiplexing();}  // Run forever
+		// std::vector<std::thread> threads;
+
+		// for (size_t i = 0; i < servers.size(); ++i) 
+		// {
+		// 	// Launch a thread for each server
+		// 	threads.push_back(std::thread(servers[i].multiplexing(), &servers[i]));
+		// }
+
+		Server server("127.0.0.1", "8080");
+		server.multiplexing();
+    } 
+	catch(const std::exception &e)
+	{
+		std::cerr << RED << "Server initialization failed: " << e.what() << RESET << std::endl;
+		return 1;
+	}
+}
 
 

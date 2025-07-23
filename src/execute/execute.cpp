@@ -1,37 +1,58 @@
 #include "../../include/webserv.hpp"
 
 std::string execute(Request &request, char **env) {
-    int pipefd[2];
+	int stdin_pipe[2];  // Parent writes, child reads
+	int stdout_pipe[2]; // Child writes, parent reads
 	std::string cgi_output;
 
-	pipe(pipefd);  // pipefd[0] = read, pipefd[1] = write
-    std::string cgi_path = request.getUri();
-    char *argv[] = {const_cast<char*>(cgi_path.c_str()), NULL};
-    if (fork() == 0)
-    {
-		dup2(pipefd[0], STDIN_FILENO);
-        dup2(pipefd[1], STDOUT_FILENO);
-        close(pipefd[0]);
-        close(pipefd[1]);
-        if (execve(cgi_path.c_str(), argv, env) == -1)
-            return "Error executing CGI script: " + std::string(strerror(errno));
-    }
-    else
-    {
-		write(pipefd[1], request.getBody().c_str(), request.getBody().length());
-		close(pipefd[1]);
-		char buffer[1024];
-	
-		ssize_t bytes_read;
-		waitpid(-1, NULL, WUNTRACED);
+	if (pipe(stdin_pipe) == -1 || pipe(stdout_pipe) == -1) {
+		std::cerr << "Error: Pipe failed" << std::endl;
+		return "";
+	}
 
-		while ((bytes_read = read(pipefd[0], buffer, sizeof(buffer) - 1)) > 0)
-		{
-			buffer[bytes_read] = '\0'; // Null-terminate
+	std::string cgi_path = request.getUri();
+	char *argv[] = {const_cast<char*>(cgi_path.c_str()), NULL};
+
+	pid_t pid = fork();
+	if (pid == -1) {
+		perror("fork failed");
+		return "";
+	}
+	if (pid == 0) {
+		// Child process
+		dup2(stdin_pipe[0], STDIN_FILENO);   // Read from parent
+		dup2(stdout_pipe[1], STDOUT_FILENO); // Write to parent
+
+		close(stdin_pipe[1]);
+		close(stdout_pipe[0]);
+		close(stdin_pipe[0]);
+		close(stdout_pipe[1]);
+
+		if (execve(cgi_path.c_str(), argv, env) == -1) {
+			perror("execve failed");
+			exit(1);
+		}
+	} else {
+		// Parent process
+		close(stdin_pipe[0]);  // Close unused read end
+		close(stdout_pipe[1]); // Close unused write end
+
+		// Write request body to CGI's stdin
+		write(stdin_pipe[1], request.getBody().c_str(), request.getBody().length());
+		close(stdin_pipe[1]); // EOF to child
+
+		// Read CGI output from child's stdout
+		char buffer[1024];
+		ssize_t bytes_read;
+		while ((bytes_read = read(stdout_pipe[0], buffer, sizeof(buffer) - 1)) > 0) {
+			buffer[bytes_read] = '\0';
 			cgi_output += buffer;
 		}
+		close(stdout_pipe[0]);
+
+		// Wait for CGI to finish
+		waitpid(pid, NULL, 0);
 	}
-	close(pipefd[0]);
 	return cgi_output;
 }
 
@@ -46,5 +67,6 @@ std::string cgi(Request &request) {
 		const_cast<char *>(content_length.c_str()),
 		NULL
 	};
+	std::cout << "CGI Starting!" << std::endl;
 	return execute(request, envp);;
 }
