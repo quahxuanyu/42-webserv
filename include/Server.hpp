@@ -5,29 +5,20 @@
 #include <vector>
 #include <poll.h>
 #include "Client.hpp"
-
-#define BLACK     "\033[0;30m"
-#define RED       "\033[0;31m"
-#define GREEN     "\033[0;32m"
-#define YELLOW    "\033[0;33m"
-#define BLUE      "\033[0;34m"
-#define MAGENTA   "\033[0;35m"
-#define CYAN      "\033[0;36m"
-#define WHITE     "\033[0;37m"
-#define RESET		"\033[0m"
+#include "Location.hpp"
 
 class Server {
 	private:
 		int _listener_fd;  //listener's socket fd
 		std::string _IP;  //IP to bind
 		std::string _port;	//port listening to
-		//std::vector<location> locations;  //location configs
-		std::string server_name; 
-		std::map<int, Client> _clients;   //map of {fd : client}
+		std::string _server_name; 
 		std::string _root;	//server root dir (from config file)
-		int _body_len;	//content length (from header)
+		int _body_size;	//content length (from header)
+		std::map<int, std::string> _error_pages;
+		std::vector<Location> _locations;  //location configs
 		std::vector<pollfd> _pfds;  //list of fd the poll is watching
-
+		std::map<int, Client> _clients;   //map of {fd : client}
 		int _fd_count;
 
 		void get_listener_socket(void);
@@ -42,6 +33,13 @@ class Server {
 	public:
 		Server();
 		Server(std::string IP, std::string port);
+		void setServerName(std::string server_name);
+		void setRoot(std::string root);
+		void setBodySize(long size);
+		void setErrorPage(int status, std::string page);
+		void addLocation(Location location);
+
+		void printInfo() const;
 		void multiplexing(void);
 		~Server();
 };
