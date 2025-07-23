@@ -41,34 +41,35 @@ void process_request(Response &response, Request &request) {
     }
     file_content = read_file(src);
     src.close();
-    response.addHeader("Content-Length", to_string(file_content.length()));
+    // response.addHeader("Content-Length", to_string(file_content.length()));
     response.setBody(file_content);
     response.setStatusCode(200);
     response.setStatusMessage("OK");
 }
 
-/**
- * @brief Sets the headers for the response based on the request and response status.
- */
-void set_headers(Response &response, Request &request) {
-    if (response.getStatusCode() == 200)
-        response.addHeader("Connection", "keep-alive");
-    else
-        response.addHeader("Connection", "close");
-    response.addHeader("Content-Type", find_mime(request.getUri()));
-    response.addHeader("Date", get_current_time());
-    response.addHeader("Server", "Webserv/1.0"); // ** TEMPORARY, wait until config file is implemented **
-}
+Response &handle_get_request(Request &request) {
+    // **Check if its a CGI request**
+	if (request.getUri().find(".cgi") != std::string::npos) {
+		// If it is a CGI request, execute the CGI script
+		std::string cgi_response = cgi(request);
 
-Response &handle_get_response(Request &request) {
-    // Create a response object
-    Response *response = new Response();
-    response->setVersion(request.getVersion()); // set the version (always HTTP/1.1)
-
-    // Set the body of the response
-    process_request(*response, request);
-
-    // Set the headers of the response
-    set_headers(*response, request);
-    return *response;
+		if (cgi_response.find("Error") != std::string::npos) {
+			// If CGI execution failed, return an error response
+			Response *error_response = new Response("HTTP/1.1", 500, "Internal Server Error");
+			error_response->setBody("CGI execution failed.");
+			return *error_response;
+		}
+		else {
+			return parse_cgi_response(cgi_response); // Parse the CGI response and return it
+		}
+	}
+	else
+	{
+		// Handle non-CGI GET requests (read and return contents of the file)
+		Response *response = new Response();
+		response->setVersion(request.getVersion());
+		process_request(*response, request);
+		set_headers(*response, request);
+		return *response;
+	}
 }

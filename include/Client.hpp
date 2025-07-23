@@ -31,7 +31,7 @@ class Client {
 		bool recv_data(std::vector<pollfd> *pfds, int pfd_i);
 		bool send_data(std::vector<pollfd> *pfds, int pfd_i);
 		void parse_request();
-		void generate_response();
+		// void generate_response();
 		bool is_time_out();
 
 	public:

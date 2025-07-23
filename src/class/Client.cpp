@@ -1,4 +1,5 @@
-#include "../include/webserv.hpp"
+#include "../../include/Client.hpp"
+#include "../../include/webserv.hpp"
 
 Client::Client() {}
 
@@ -66,7 +67,7 @@ bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
 		
 			//generate response
 			parse_request();
-			response = handle_get_response(request);
+			response = generate_response(request);
 			send_buf = response.toString();
 			recv_buf.clear();
 

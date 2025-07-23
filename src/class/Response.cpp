@@ -1,4 +1,4 @@
-#include "../include/webserv.hpp"
+#include "../../include/webserv.hpp"
 
 Response::Response() {}
 
@@ -55,6 +55,6 @@ std::string Response::toString() const {
 	for (i = _headers.begin(); i != _headers.end(); ++i) {
 		response_str += i->first + ": " + i->second + "\r\n";
 	}
-	response_str += "\r\n" + _body;
+	response_str += "\r\n"+ _body;
 	return response_str;
 }
