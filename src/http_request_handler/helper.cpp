@@ -56,3 +56,17 @@ void set_headers(Response &response, Request &request)
 	response.addHeader("Date", get_current_time());
 	response.addHeader("Server", "Webserv/1.0"); // ** TEMPORARY, wait until config file is implemented **
 }
+
+/***
+ * @brief Reads the printed value fo the execve CGI file and returns parse into a response
+ */
+Response &parse_cgi_response(std::string cgi_response) {
+	Response *response = new Response("HTTP/1.1", 200, "OK");
+	response->setBody(get_body(cgi_response)); // Extract body from CGI output
+	response->addHeader("Connection", "keep-alive");
+	response->addHeader("Content-Length", to_string(response->getBody().length()));
+	response->addHeader("Content-Type", get_content_type(cgi_response)); // Extract content type from CGI output
+	response->addHeader("Date", get_current_time());
+	response->addHeader("Server", "Webserv/1.0"); // ** TEMPORARY, wait until config file is implemented **
+	return *response;
+}

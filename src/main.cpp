@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 	delete &GET_response;
 
 	std::cout << "\n----------POST Request CGI: Uplaod HTML File-----------" << std::endl;
-	Request POST_request("POST", "cgi-bin/test.cgi", "HTTP/1.1");
+	Request POST_request("POST", "cgi-bin/upload_file.cgi", "HTTP/1.1");
 	POST_request.addHeader("Host", "localhost");
 	POST_request.addHeader("User-Agent", "WebClient/1.0");
 	POST_request.addHeader("Content-Type", "multipart/form-data; boundary=---------------------------2858016734199026723269487220");

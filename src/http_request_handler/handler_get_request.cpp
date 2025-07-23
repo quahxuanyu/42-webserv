@@ -60,18 +60,12 @@ Response &handle_get_request(Request &request) {
 			return *error_response;
 		}
 		else {
-			Response *response = new Response("HTTP/1.1", 200, "OK");
-			response->setBody(get_body(cgi_response)); // Extract body from CGI output
-			response->addHeader("Connection", "keep-alive");
-			response->addHeader("Content-Length", to_string(response->getBody().length()));
-			response->addHeader("Content-Type", get_content_type(cgi_response)); // Extract content type from CGI output
-			response->addHeader("Date", get_current_time());
-			response->addHeader("Server", "Webserv/1.0"); // ** TEMPORARY, wait until config file is implemented **
-			return *response;
+			return parse_cgi_response(cgi_response); // Parse the CGI response and return it
 		}
 	}
-	else {
-		// Create a response object
+	else
+	{
+		// Handle non-CGI GET requests (read and return contents of the file)
 		Response *response = new Response();
 		response->setVersion(request.getVersion());
 		process_request(*response, request);

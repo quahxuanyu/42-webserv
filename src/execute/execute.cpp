@@ -14,7 +14,7 @@ std::string execute(Request &request, char **env) {
         close(pipefd[0]);
         close(pipefd[1]);
         if (execve(cgi_path.c_str(), argv, env) == -1)
-            std::cerr << "ERROR: cannot execute: " << cgi_path << std::endl;
+            return "Error executing CGI script: " + std::string(strerror(errno));
     }
     else
     {
@@ -36,6 +36,7 @@ std::string execute(Request &request, char **env) {
 }
 
 std::string cgi(Request &request) {
+	//Make environment variables for CGI execution
 	std::string method_env = "REQUEST_METHOD=" + request.getMethod();
 	std::string content_type = "CONTENT_TYPE=" + request.getHeader("Content-Type");
 	std::string content_length = "CONTENT_LENGTH=" + to_string(request.getBody().length());
@@ -45,6 +46,5 @@ std::string cgi(Request &request) {
 		const_cast<char *>(content_length.c_str()),
 		NULL
 	};
-	std::string cgi_response = execute(request, envp);
-	return cgi_response;
+	return execute(request, envp);;
 }
