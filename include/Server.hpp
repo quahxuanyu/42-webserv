@@ -14,7 +14,7 @@ class Server {
 		std::string _port;	//port listening to
 		std::string _server_name; 
 		std::string _root;	//server root dir (from config file)
-		int _body_size;	//content length (from header)
+		long _body_size;	//content length (from header)
 		std::map<int, std::string> _error_pages;
 		std::vector<Location> _locations;  //location configs
 		std::vector<pollfd> _pfds;  //list of fd the poll is watching
@@ -38,6 +38,12 @@ class Server {
 		void setBodySize(long size);
 		void setErrorPage(int status, std::string page);
 		void addLocation(Location location);
+
+		std::string getRoot() const;
+		std::string getIpPort() const;
+		std::map<int, std::string> getErrorPages() const;
+		long getBodySizeLimit() const;
+		std::vector<Location> getLocations() const;
 
 		void printInfo() const;
 		void multiplexing(void);

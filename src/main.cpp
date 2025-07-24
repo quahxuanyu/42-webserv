@@ -283,6 +283,63 @@ void checkTokens(std::vector<std::string> tokens)
 
 }
 
+bool isFile(const std::string &path)
+{
+	struct stat sb;
+	if (stat(path.c_str(), &sb) == 0 && S_ISREG(sb.st_mode))
+		return true;
+	return false;
+}
+
+bool isDirectory(const std::string &path)
+{
+	struct stat sb;
+	if (stat(path.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode))
+		return true;
+	return false;
+}
+
+void validateConfig(std::vector<Server> &servers)
+{
+	std::set<std::string> IP_port;
+	for (size_t i = 0; i < servers.size(); i++)
+	{
+		//check root
+		// if (!isDirectory(servers[i].getRoot()))
+		// 	throw ParseException("Root path must be a directory");
+		//check error page
+		std::map<int, std::string> error_pages = servers[i].getErrorPages();
+		std::map<int, std::string>::const_iterator it;
+		for (it = error_pages.begin(); it != error_pages.end(); ++it)
+			if (!isFile(it->second))
+				throw ParseException("Error page must be a file");
+
+		//check body size limit
+		if (servers[i].getBodySizeLimit() <= 0)
+			throw ParseException("Client body size limit must be a positive number");
+
+		//check location block
+		std::vector<Location> locations = servers[i].getLocations();
+		for (size_t j = 0; j < locations.size(); j++)
+		{
+			// if (locations[i].hasRoot())
+			// 	if (!isDirectory(locations[i].getRoot()))
+			// 		throw ParseException("Root path must be a directory");
+			// if (locations[i].hasAlias())
+			// 	if (!isDirectory(locations[i].getAlias()))
+			// 		throw ParseException("Alias path must be a directory");
+			std::set<std::string> methods = locations[i].getMethods();
+			std::set<std::string>::const_iterator it;
+			for (it = methods.begin(); it != methods.end(); ++it)
+			{
+				if (!(*it == "GET" || *it == "POST" || *it == "DELETE"))
+					throw ParseException("Invalid HTTP method");
+			}
+		}
+
+	}
+}
+
 std::vector<Server> tokenise(std::string content)
 {
 	std::vector<std::string> tokens;
@@ -312,6 +369,7 @@ std::vector<Server> tokenise(std::string content)
 		std::vector<Server> servers = parseServer(tokens);
 		for (size_t i = 0; i < servers.size(); i++)
 			servers[i].printInfo();
+		validateConfig(servers);
 		std::cout << GREEN << "No issue!" << RESET << std::endl;
 		return (servers);
 	}
@@ -349,7 +407,7 @@ std::vector<Server> parseConfigFile(char *file)
 	}
 	std::vector<Server> servers = tokenise(content); 
 	return (servers);
-	}
+}
 
 int main(int argc, char **argv)
 {

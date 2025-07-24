@@ -24,6 +24,7 @@
 #include "Location.hpp"
 #include "Exception.hpp"
 
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 

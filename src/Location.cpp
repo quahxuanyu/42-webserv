@@ -54,6 +54,40 @@ void Location::setCGI(int on)
 	_cgi = on;
 }
 
+bool Location::hasRoot () const
+{
+	return (!_root.empty());
+}
+
+bool Location::hasAlias () const
+{
+	return (!_alias.empty());
+}
+
+bool Location::hasIndex () const
+{
+	return (!_index.empty());
+}
+
+std::string Location::getRoot() const
+{
+	return _root;
+}
+std::string Location::getAlias() const
+{
+	return _alias;
+}
+std::string Location::getIndex() const
+{
+	return _index;
+}
+
+std::set<std::string> Location::getMethods() const
+{
+	return _methods;
+}
+		
+
 void Location::printInfo() const
 {
 	std::cout << "=== Location's info ===" << std::endl;

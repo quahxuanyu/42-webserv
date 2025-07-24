@@ -31,6 +31,16 @@ class Location {
 		void setRedirectUrl(std::string url);
 		void setCGI(int on);
 
+		bool hasRoot () const;
+		bool hasAlias () const;
+		bool hasIndex () const;
+
+		std::set<std::string> getMethods() const;
+		std::string getRoot() const;
+		std::string getAlias() const;
+		std::string getIndex() const;
+
+
 		void printInfo() const;
 
 		

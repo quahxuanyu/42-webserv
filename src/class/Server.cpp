@@ -38,6 +38,16 @@ void Server::addLocation(Location location)
 	_locations.push_back(location);
 }
 
+long Server::getBodySizeLimit() const
+{
+	return _body_size;
+}
+
+std::vector<Location> Server::getLocations() const
+{
+	return _locations;
+}
+
 void Server::printInfo() const
 {
 	std::cout << "=== Server's Info ===" << std::endl;
@@ -55,6 +65,21 @@ void Server::printInfo() const
 	std::cout << "Locations :" << std::endl;
 	for (size_t i = 0; i < _locations.size(); i++)
 		_locations[i].printInfo();
+}
+
+std::string Server::getRoot() const
+{
+	return _root;
+}
+
+std::string Server::getIpPort() const
+{
+	return (_IP + _port);
+}
+
+std::map<int, std::string> Server::getErrorPages() const
+{
+	return _error_pages;
 }
 
 void Server::get_listener_socket()
