@@ -21,7 +21,7 @@ class Server {
 		std::map<int, Client> _clients;   //map of {fd : client}
 		int _fd_count;
 
-		void get_listener_socket(void);
+		
 		void process_connections();
 		void accept_connection();
 		void close_connection(int pfd_i);
@@ -39,15 +39,20 @@ class Server {
 		void setErrorPage(int status, std::string page);
 		void addLocation(Location location);
 
+		std::string getIp() const;
+		std::string getPort() const;
 		std::string getRoot() const;
-		std::string getIpPort() const;
+		std::string getServerInfo() const;
 		std::map<int, std::string> getErrorPages() const;
 		long getBodySizeLimit() const;
 		std::vector<Location> getLocations() const;
 
 		void printInfo() const;
-		void multiplexing(void);
+		
 		~Server();
 };
+
+int get_listener_socket(const std::string &ip, const std::string &port);
+void runServers(void);
 
 #endif

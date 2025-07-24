@@ -85,6 +85,11 @@ Location parseLocation(std::vector<std::string> tokens, size_t *i)
 			location.setRoot(tokens[*i + 1]);
 			*i += 2;
 		}
+		else if (tokens[*i] == "alias")
+		{
+			location.setAlias(tokens[*i + 1]);
+			*i += 2;
+		}
 		else if (tokens[*i] == "methods")
 		{
 			size_t j = *i;
@@ -147,8 +152,9 @@ std::vector<Server> parseServer(std::vector<std::string> tokens)
 					server_1.setRoot(tokens[i + 1]);
 					i += 3;
 				}
-				else if (tokens[i] == "client_max_body_size")
+				else if (tokens[i] == "client_body_size_buf")
 				{
+					//if char convert to 0
 					server_1.setBodySize(strtol(tokens[i + 1].c_str(), NULL, 10));
 					i += 3;
 				}
@@ -175,8 +181,8 @@ std::vector<Server> parseServer(std::vector<std::string> tokens)
 bool isDirective(std::string keyword)
 {
 	if (keyword == "listen" || keyword == "server_name" || keyword == "root" || keyword == "error_page" 
-	|| keyword == "client_max_body_size" || keyword == "index" || keyword == "methods" || keyword == "return" 
-	|| keyword == "cgi" || keyword == "autoindex")
+	|| keyword == "client_body_size_buf" || keyword == "index" || keyword == "methods" || keyword == "return" 
+	|| keyword == "cgi" || keyword == "autoindex" || keyword == "alias")
 		return true;
 	else 
 		return false;
@@ -285,58 +291,50 @@ void checkTokens(std::vector<std::string> tokens)
 
 bool isFile(const std::string &path)
 {
+	char cwd[256];
+	if (!getcwd(cwd, sizeof(cwd)))
+		throw std::runtime_error("Get cdw failed");
+	std::string const cwd_str = cwd;
+
+	std::string ab_path = (cwd_str + path);
+	// std::cout << MAGENTA << "path:" << ab_path << RESET << std::endl;
+
 	struct stat sb;
-	if (stat(path.c_str(), &sb) == 0 && S_ISREG(sb.st_mode))
+	if (stat(ab_path.c_str(), &sb) == 0 && S_ISREG(sb.st_mode))
 		return true;
 	return false;
 }
 
 bool isDirectory(const std::string &path)
 {
+	
 	struct stat sb;
-	if (stat(path.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode))
+	if (stat((path).c_str(), &sb) == 0 && S_ISDIR(sb.st_mode))
 		return true;
 	return false;
 }
 
 void validateConfig(std::vector<Server> &servers)
 {
-	std::set<std::string> IP_port;
+	std::cout << "Validating config..." << std::endl;
+	std::set<std::string> IP_Port_Server;
 	for (size_t i = 0; i < servers.size(); i++)
 	{
-		//check root
-		// if (!isDirectory(servers[i].getRoot()))
-		// 	throw ParseException("Root path must be a directory");
 		//check error page
 		std::map<int, std::string> error_pages = servers[i].getErrorPages();
 		std::map<int, std::string>::const_iterator it;
 		for (it = error_pages.begin(); it != error_pages.end(); ++it)
+		{
 			if (!isFile(it->second))
-				throw ParseException("Error page must be a file");
+				throw ParseException("Error page must be a file");}
 
 		//check body size limit
 		if (servers[i].getBodySizeLimit() <= 0)
 			throw ParseException("Client body size limit must be a positive number");
 
-		//check location block
-		std::vector<Location> locations = servers[i].getLocations();
-		for (size_t j = 0; j < locations.size(); j++)
-		{
-			// if (locations[i].hasRoot())
-			// 	if (!isDirectory(locations[i].getRoot()))
-			// 		throw ParseException("Root path must be a directory");
-			// if (locations[i].hasAlias())
-			// 	if (!isDirectory(locations[i].getAlias()))
-			// 		throw ParseException("Alias path must be a directory");
-			std::set<std::string> methods = locations[i].getMethods();
-			std::set<std::string>::const_iterator it;
-			for (it = methods.begin(); it != methods.end(); ++it)
-			{
-				if (!(*it == "GET" || *it == "POST" || *it == "DELETE"))
-					throw ParseException("Invalid HTTP method");
-			}
-		}
-
+		std::pair<std::set<std::string>::iterator, bool> is_inserted = IP_Port_Server.insert(servers[i].getServerInfo());
+		if (!is_inserted.second)
+			throw ParseException("Duplicate server block");
 	}
 }
 
@@ -378,11 +376,13 @@ std::vector<Server> tokenise(std::string content)
 		std::cerr << RED << "Config file " << e.what() << RESET << std::endl;
 		_exit(1);
 	}
+
 	catch (ParseException &e)
 	{
 		std::cerr << RED << "Config file parsing error: " << e.what() << RESET << std::endl;
 		_exit(1);
 	}
+	
 
 }
 
@@ -416,8 +416,30 @@ int main(int argc, char **argv)
 	// if (argc != 2)
 	// 	return (std::cout << "Incorrect number of arguments" << std::endl, 2);
 	std::vector<Server> servers = parseConfigFile(argv[1]);
+	std::map<std::pair<std::string, std::string>, std::vector<Server> > addr_server;
+	for (std::vector<Server>::iterator itr = servers.begin(); itr != servers.end(); ++itr)
+	{
+		std::pair<std::string, std::string> addr(itr->getIp(), itr->getPort());
+		addr_server[addr].push_back(*itr);
+	}
+	std::map<std::pair<std::string, std::string>, std::vector<Server> >::iterator itr ;
+	for (itr = addr_server.begin(); itr != addr_server.end(); ++itr)
+	{
+		const std::string &ip = itr->first.first;
+		const std::string &port = itr->first.second;
+		int socket_fd = get_listener_socket(ip, port);
+
+		BindSocket socket;
+		socket.sockfd = socket_fd;
+		socket.ip = ip;
+		socket.port = port;
+		socket.servers = itr->second;
+
+		listening_sockets.push_back(socket);
+	}
     try 
 	{
+		runServers(listening_sockets);
 		// for (size_t i = 0; i < servers.size(); i++)
         // {
 		// 	Server server = servers[i]
@@ -431,14 +453,19 @@ int main(int argc, char **argv)
 		// 	threads.push_back(std::thread(servers[i].multiplexing(), &servers[i]));
 		// }
 
-		Server server("127.0.0.1", "8080");
-		server.multiplexing();
+		
     } 
+	catch (std::runtime_error &e)
+	{
+		std::cerr << RED << "Runtime Error: " << e.what() << RESET << std::endl;
+		_exit(1);
+	}
 	catch(const std::exception &e)
 	{
 		std::cerr << RED << "Server initialization failed: " << e.what() << RESET << std::endl;
 		return 1;
 	}
+
 }
 
 

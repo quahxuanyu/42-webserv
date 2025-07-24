@@ -39,8 +39,16 @@ Response &generate_response(Request &request);	 // Processes the request and ret
 #define BLUE      "\033[0;34m"
 #define MAGENTA   "\033[0;35m"
 #define CYAN      "\033[0;36m"
-#define WHITE     "\033[0;37m"
 #define RESET		"\033[0m"
+
+struct BindSocket {
+	int sockfd;
+	std::string ip;
+	std::string port;
+	std::vector<Server> servers; // all servers using this IP+port
+};
+
+std::vector<BindSocket> listening_sockets;
 
 // HELPER.CPP
 std::string to_string(int value); // Converts an integer to a string

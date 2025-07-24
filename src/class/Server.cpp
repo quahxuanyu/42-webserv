@@ -3,14 +3,14 @@
 Server::Server()
 {
 	//get_listener_socket();
-	get_listener_socket();
+	//get_listener_socket();
 	std::cout << "Server default constructor called" << _port << std::endl;
 }
 
 Server::Server(std::string IP, std::string port) : _IP(IP), _port(port), _fd_count(0)
 {
-	get_listener_socket();
-	std::cout << "Server (" << _IP << " " << _port << ") created, fd: " << _listener_fd << std::endl;
+	// get_listener_socket();
+	// std::cout << "Server (" << _IP << " " << _port << ") created, fd: " << _listener_fd << std::endl;
 }
 
 void Server::setServerName(std::string server_name)
@@ -48,6 +48,16 @@ std::vector<Location> Server::getLocations() const
 	return _locations;
 }
 
+
+std::string Server::getIp() const
+{
+	return _IP;
+}
+std::string Server::getPort() const
+{
+	return _port;
+}
+
 void Server::printInfo() const
 {
 	std::cout << "=== Server's Info ===" << std::endl;
@@ -72,9 +82,9 @@ std::string Server::getRoot() const
 	return _root;
 }
 
-std::string Server::getIpPort() const
+std::string Server::getServerInfo() const
 {
-	return (_IP + _port);
+	return (_IP + _port + _server_name);
 }
 
 std::map<int, std::string> Server::getErrorPages() const
@@ -82,61 +92,7 @@ std::map<int, std::string> Server::getErrorPages() const
 	return _error_pages;
 }
 
-void Server::get_listener_socket()
-{
-	int listener;
-	int yes = 1;
-	int status;
 
-	struct addrinfo hints;
-	struct addrinfo *ai = NULL;
-	struct addrinfo *p = NULL;
-
-	memset(&hints, 0 , sizeof(hints));
-	hints.ai_family = AF_INET; //IPv4
-	hints.ai_socktype = SOCK_STREAM; //TCP
-	hints.ai_flags = AI_PASSIVE; // bind with local address
-
-	status = getaddrinfo(_IP.c_str(), _port.c_str() , &hints, &ai);   // might change
-	if (status)
-		throw std::runtime_error("getaddrinfo failed: " + std::string(gai_strerror(status)));
-	
-	for (p = ai; p != NULL; p = p->ai_next)
-	{
-		//look for a valid socket
-		listener = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
-		if (listener < 0)
-			continue;
-
-		// allow addr reuse
-		setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
-		if (bind(listener, p->ai_addr, p->ai_addrlen) < 0)
-		{
-			close(listener);
-			continue;
-		}
-		break; // found socket and bind
-	}
-
-	//no suitable socket
-	if (p == NULL)
-	{
-		freeaddrinfo(ai);
-		throw std::runtime_error("Could not bind with any address");
-	}
-
-	//done with addrinfo
-	freeaddrinfo(ai);
-
-	//listen
-	if (listen(listener, 10) == -1)
-	{
-		close(listener);
-		throw std::runtime_error("Listen failed");
-	}
-
-	_listener_fd = listener;
-}
 
 //create new poll fd and add to pfds vector
 void Server::add_to_pfds(int client_fd)
@@ -214,10 +170,74 @@ void Server::process_connections()
 	}
 }
 
-void Server::multiplexing()
+
+Server::~Server() {}
+
+
+int get_listener_socket(const std::string &ip, const std::string &port)
+{
+	int listener;
+	int yes = 1;
+	int status;
+
+	struct addrinfo hints;
+	struct addrinfo *ai = NULL;
+	struct addrinfo *p = NULL;
+
+	memset(&hints, 0 , sizeof(hints));
+	hints.ai_family = AF_INET; //IPv4
+	hints.ai_socktype = SOCK_STREAM; //TCP
+	hints.ai_flags = AI_PASSIVE; // bind with local address
+
+	status = getaddrinfo(ip.c_str(), port.c_str() , &hints, &ai);
+	if (status)
+		throw std::runtime_error("getaddrinfo failed: " + std::string(gai_strerror(status)));
+	
+	for (p = ai; p != NULL; p = p->ai_next)
+	{
+		//look for a valid socket
+		listener = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+		if (listener < 0)
+			continue;
+
+		// allow addr reuse
+		setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
+		if (bind(listener, p->ai_addr, p->ai_addrlen) < 0)
+		{
+			close(listener);
+			continue;
+		}
+		break; // found socket and bind
+	}
+
+	//no suitable socket
+	if (p == NULL)
+	{
+		freeaddrinfo(ai);
+		throw std::runtime_error("Could not bind with any address");
+	}
+
+	//done with addrinfo
+	freeaddrinfo(ai);
+
+	//listen
+	if (listen(listener, 10) == -1)
+	{
+		close(listener);
+		throw std::runtime_error("Listen failed");
+	}
+
+	return listener;
+}
+
+void runServers(std::vector<BindSocket> listening_sockets)
 {
 	//add listener to the vector
+	//get_listener_socket();
+
+
 	pollfd listener;
+	listener.
 	listener.fd = _listener_fd;
 	listener.events = POLLIN;
 	_pfds.push_back(listener);
@@ -232,5 +252,3 @@ void Server::multiplexing()
 		process_connections();
 	}
 }
-
-Server::~Server() {}
