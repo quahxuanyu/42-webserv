@@ -1,8 +1,9 @@
 #include "../../include/webserv.hpp"
 
-Response &generate_response(Request &request) {
+Response &generate_response(std::vector<Server> &servers, Request &request)
+{
 	if (request.getMethod() == "GET") {
-		return handle_get_request(request);
+		return handle_get_request(servers, request);
 	}
 	else if (request.getMethod() == "POST") {
 		return handle_post_request(request);

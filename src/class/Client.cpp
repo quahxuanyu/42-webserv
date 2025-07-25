@@ -70,10 +70,11 @@ bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
 		if (recv_buf.find("\r\n\r\n") != std::string::npos)
 		{
 			//generate response
+			std::cout << BLUE << "recv_data:" << recv_buf << RESET <<std::endl; 
 			parse_request();
 			if (request.getMethod() == "POST")
 			{	
-				// std::cout << BLUE << "recv_data:" << recv_buf << RESET <<std::endl; 
+				
 				size_t first_sep = recv_buf.find("\r\n\r\n");
 				std::string body = recv_buf.substr(first_sep + 4);
 				size_t content_length = atoi(request.getHeader("Content-Length").c_str());
@@ -82,7 +83,7 @@ bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
 				if (body.length() >= content_length)
 				{
 					std::cout << GREEN << "Finished Receiving Data!" << RESET << std::endl;
-					response = generate_response(request);
+					response = generate_response(socket_to_servers[socket_fd], request);
 					send_buf = response.toString();
 					std::cout << "RESPONSE:\n" << send_buf << std::endl;
 					recv_buf.clear();
@@ -93,7 +94,7 @@ bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
 			}
 			else
 			{
-				response = generate_response(request);
+				response = generate_response(socket_to_servers[socket_fd], request);
 				send_buf = response.toString();
 				recv_buf.clear();
 				//allow send()

@@ -45,8 +45,12 @@ class Server {
 		std::string getRoot() const;
 		std::string getServerInfo() const;
 		std::map<int, std::string> getErrorPages() const;
+		std::string getPage(int error_code) const;
 		long getBodySizeLimit() const;
 		std::vector<Location> getLocations() const;
+		std::string getServerName() const;
+
+		bool hasRoot () const;
 
 		void printInfo() const;
 		

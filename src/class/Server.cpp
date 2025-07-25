@@ -92,6 +92,23 @@ std::map<int, std::string> Server::getErrorPages() const
 	return _error_pages;
 }
 
+std::string Server::getPage(int error_code) const
+{
+	return _error_pages.at(error_code);
+}
+
+std::string Server::getServerName() const
+{
+	return _server_name;
+}
+
+
+bool Server::hasRoot () const
+{
+	return (!_root.empty());
+}
+
+Server::~Server() {}
 
 
 // //create new poll fd and add to pfds vector
@@ -156,8 +173,6 @@ std::map<int, std::string> Server::getErrorPages() const
 
 
 
-
-// Server::~Server() {}
 
 
 

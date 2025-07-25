@@ -118,6 +118,7 @@ Location parseLocation(std::vector<std::string> tokens, size_t *i)
 			(*i)++;
 	}
 	(*i)++;
+	std::cout << RED<< "debug" << RESET << std::endl;
 	return location;
 }
 
@@ -417,24 +418,10 @@ int main(int argc, char **argv)
 	// 	return (std::cout << "Incorrect number of arguments" << std::endl, 2);
 	std::vector<Server> servers = parseConfigFile(argv[1]);
 
-	Connection connection(servers);
-
     try 
 	{
-		//runServers(listening_sockets);
-		// for (size_t i = 0; i < servers.size(); i++)
-        // {
-		// 	Server server = servers[i]
-		// 	();
-       	// 	server.multiplexing();}  // Run forever
-		// std::vector<std::thread> threads;
-
-		// for (size_t i = 0; i < servers.size(); ++i) 
-		// {
-		// 	// Launch a thread for each server
-		// 	threads.push_back(std::thread(servers[i].multiplexing(), &servers[i]));
-		// }
-
+		Connection connection(servers);
+		connection.runServers();
 		
     } 
 	catch (std::runtime_error &e)

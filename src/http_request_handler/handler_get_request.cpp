@@ -17,16 +17,51 @@ std::string read_file(std::ifstream &src) {
 /**
  * @brief Reads the content of a file and sets it in the response body.
  */
-void process_request(Response &response, Request &request) {
+void process_request(Server &server, Response &response, Request &request) {
     std::string uri = request.getUri();
     std::string file_path;
     std::string file_content;
 
     // ** TEMPORARY URI file path handling (need to wait for config file implementation) **
-    if (uri == "/")
-        file_path = "html/upload.html";
-    else
-        file_path = "." + uri; //wrong
+    // if (uri == "/")
+    //     file_path = "html/upload.html";
+    // else
+    //     file_path = "." + uri; //wrong
+
+    //match location block
+    Location location;
+    int matchedIndex = -1;
+    std::vector<Location> locations = server.getLocations();
+    for (size_t i = 0; i < locations.size(); i++)
+    {
+        if (locations[i].getPath() == uri)
+        {
+            //matchedIndex = i;
+            location = locations[i];
+            file_path = locations[i].getIndex();                    
+            break;
+        }
+    }
+    if (matchedIndex == -1)
+        file_path = server.getPage(404);  //else set return page to 404
+
+    if (location.hasRedirectUrl())
+        //handle redirection
+    // else if (location.cgi)
+    //     //handle cgi
+    if 
+    else if (location.hasIndex())
+    {
+        if (location.hasRoot())
+            file_path = location.getRoot() + location.getIndex();
+        else if (location.hasAlias())
+            file_path = location.getAlias() + location.getIndex();
+        else if (server.hasRoot())
+    }
+    else if (location.autoindex)
+    else{
+
+    }
 
     std::ifstream src(file_path.c_str(), std::ios::binary);
     if (!src) {
@@ -47,7 +82,7 @@ void process_request(Response &response, Request &request) {
     response.setStatusMessage("OK");
 }
 
-Response &handle_get_request(Request &request) {
+Response &handle_get_request(std::vector<Server> &servers, Request &request) {
 
     //**CHECKING WITH THE LOCATION BLOCKS**/
         // 1. See if match with any location block
@@ -58,6 +93,19 @@ Response &handle_get_request(Request &request) {
         // - Else: autoindex, methods, root, alias
         // - Else routing/redirection
         // 2. Else, return error 404
+
+
+    Server server = servers[0];
+    std::cout << "request host: " << request.getHeader("Host") << std::endl;
+    if (servers.size() > 1)
+    {
+        for (size_t i = 0; i < servers.size(); i++)
+        {
+            std::cout << "server_name :" << servers[i].getServerName() << std::endl;
+            if (servers[i].getServerName() == request.getHeader("Host"))
+                server = servers[i];
+        }
+    }
 
     // CGI DIRECTIVE
 	if (request.getUri().find(".cgi") != std::string::npos) {
@@ -79,7 +127,7 @@ Response &handle_get_request(Request &request) {
 		// Handle non-CGI GET requests (read and return contents of the file)
 		Response *response = new Response();
 		response->setVersion(request.getVersion());
-		process_request(*response, request);
+		process_request(server, *response, request);
 		set_headers(*response, request);
 		return *response;
 	}

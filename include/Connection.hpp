@@ -1,8 +1,6 @@
 #ifndef CONNECTION_HPP
 #define CONNECTION_HPP
 
-#include "../../include/webserv.hpp"
-
 
 class Connection {
 private:
@@ -13,7 +11,7 @@ private:
 	std::vector<pollfd> _pfds;  //list of sockets poll is watching
 	std::set<int> listening_fds;	//set of listening sockets
 	std::map<int, Client> _clients;   //map of {fd : client}
-	std::map<int, std::vector<Server>> _socket_to_servers;  // listen_fd -> matching Server blocks
+	
 
 public:
 	Connection(std::vector<Server> servers);
@@ -31,5 +29,5 @@ private:
 	void close_connection(int fd);
 };
 
-#endif;
+#endif
 

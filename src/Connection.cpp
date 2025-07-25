@@ -1,7 +1,10 @@
-#include "../../include/webserv.hpp"
+#include "../include/webserv.hpp"
+
+std::map<int, std::vector<Server> > socket_to_servers;
 
 Connection::Connection(std::vector<Server> servers) : _fd_count(0), _servers(servers) {}
 
+//group servers with the same IP port 
 void Connection::group_servers()
 {
 	for (std::vector<Server>::iterator itr = _servers.begin(); itr != _servers.end(); ++itr)
@@ -128,7 +131,7 @@ int Connection::get_listener_socket(const std::string &ip, const std::string &po
 	return listener;
 }
 
-
+//add listener fd and servers to '_socket_to_servers' map
 void Connection::add_listener_socket()
 {
 	//group servers according to Ip & Port
@@ -142,9 +145,11 @@ void Connection::add_listener_socket()
 		const std::string &port = itr->first.second;
 		int socket_fd = get_listener_socket(ip, port);
 
-		_socket_to_servers[socket_fd] = itr->second;
+		socket_to_servers[socket_fd] = itr->second;
 	}
 }
+
+//iterate through all the sockets in pfds
 void Connection::process_connections()
 {
 	for (int i = 0; i < _fd_count; i++)
@@ -161,7 +166,8 @@ void Connection::process_connections()
 		else if ((_pfds)[i].revents & POLLIN)
 		{	
 			std::cout << RED << "recv smtg from client" << RESET <<  std::endl;
-			handle_client_read(i);}
+			handle_client_read(i);
+		}
 		else if ((_pfds)[i].revents & POLLOUT)
 			handle_client_write(i);
 	}
@@ -169,18 +175,28 @@ void Connection::process_connections()
 
 void Connection::runServers()
 {
+	//_socket_to_servers ready
+	add_listener_socket();
+
 	//add listener to the vector
-	//get_listener_socket();
-	std::map<int, std::vector<Server>>::iterator it;
-	for (it = _socket_to_servers.begin(); it != _socket_to_servers.end(); ++it)
+	std::map<int, std::vector<Server> >::iterator it;
+	for (it = socket_to_servers.begin(); it != socket_to_servers.end(); ++it)
 	{
+		
 		pollfd listener;
 		listener.fd = it->first;
 		listener.events = POLLIN;
 
 		_pfds.push_back(listener);	//add to pfds for poll
 		listening_fds.insert(listener.fd);	//add to listening socket set
+
+		for (size_t i = 0; i < it->second.size(); i++)
+		{	
+			std::cout << CYAN << "listener fd: " << listener.fd << ", servers: " << RESET <<std::endl;
+			it->second[i].printInfo();
+		}
 	}
+
 	_fd_count = _pfds.size();
 	std::cout << "Server: waiting for connections.." << std::endl;
 	while (1)
