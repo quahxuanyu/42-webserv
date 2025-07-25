@@ -22,15 +22,8 @@ class Server {
 		int _fd_count;
 
 		
-		void process_connections();
-		void accept_connection();
-		void close_connection(int pfd_i);
-
-		void add_to_pfds(int new_fd);
-		void handle_client_read(int pfd_i);
-		void handle_client_write(int pfd_i);
-
-	public:
+		
+		public:
 		Server();
 		Server(std::string IP, std::string port);
 		void setServerName(std::string server_name);
@@ -38,6 +31,14 @@ class Server {
 		void setBodySize(long size);
 		void setErrorPage(int status, std::string page);
 		void addLocation(Location location);
+		
+		
+		// void accept_connection(int _listener_fd);
+		// void close_connection(int pfd_i);
+
+		// void add_to_pfds(int new_fd);
+		// void handle_client_read(int pfd_i);
+		// void handle_client_write(int pfd_i);
 
 		std::string getIp() const;
 		std::string getPort() const;
@@ -52,7 +53,8 @@ class Server {
 		~Server();
 };
 
-int get_listener_socket(const std::string &ip, const std::string &port);
-void runServers(void);
+// int get_listener_socket(const std::string &ip, const std::string &port);
+// void runServers(void);
+// void process_connections();
 
 #endif

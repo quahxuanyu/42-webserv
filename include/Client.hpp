@@ -22,12 +22,13 @@ class Client {
 		std::string send_buf;	//store outgoing response
 		Request request;	//store HTTP request (obj)
 		Response response;
-		Server *server;		//server that client connects to 
+		
 		time_t last_activity;	//timeout handling
 		bool header_parsed;		//check if header has fully received
 		bool keep_alive;	//check if the connection should be closed
 
 	public:
+		int socket_fd;		//server that client connects to 
 		bool recv_data(std::vector<pollfd> *pfds, int pfd_i);
 		bool send_data(std::vector<pollfd> *pfds, int pfd_i);
 		void parse_request();

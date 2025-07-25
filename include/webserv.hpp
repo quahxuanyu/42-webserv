@@ -23,6 +23,7 @@
 #include "Client.hpp"
 #include "Location.hpp"
 #include "Exception.hpp"
+#include "Connection.hpp"
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -48,7 +49,7 @@ struct BindSocket {
 	std::vector<Server> servers; // all servers using this IP+port
 };
 
-std::vector<BindSocket> listening_sockets;
+//std::vector<BindSocket> listening_sockets;
 
 // HELPER.CPP
 std::string to_string(int value); // Converts an integer to a string

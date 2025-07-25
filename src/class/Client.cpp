@@ -49,17 +49,17 @@ void Client::parse_request()
 
 bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
 {
-	std::cout << YELLOW << "Server reading from fd " << (*pfds)[pfd_i].fd << RESET << std::endl;
-	char buf[256];
-	int nbytes = recv((*pfds)[pfd_i].fd, buf, sizeof(buf), 0);
 	int sender_fd = (*pfds)[pfd_i].fd;
-
+	std::cout << YELLOW << "Server reading from fd " << sender_fd<< RESET << std::endl;
+	char buf[256];
+	int nbytes = recv(sender_fd, buf, sizeof(buf), 0);
+	
 	if (nbytes <= 0)
 	{
 		if (nbytes == 0)
 			std::cout << "pollserver: socket " << sender_fd << " hungup" << std::endl;
 		else
-			std::cerr << "Error : recv" << std::endl;
+			std::cerr << "Error : recv" << std::endl; //throw 
 		return false;
 	}
 	else
@@ -67,11 +67,8 @@ bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
 		recv_buf.append(buf, nbytes);
 		// recv_buf += std::string(buf);
 		// std::cout << "[DEBUG] Current recv_buf content:\n" << recv_buf << std::endl;
-		if (recv_buf.find("\r\n\r\n") != std::string::npos )
+		if (recv_buf.find("\r\n\r\n") != std::string::npos)
 		{
-
-			// std::cout << "Server : recv from fd " << sender_fd << ": \n - REQUEST -\n" << BLUE << recv_buf << RESET << std::endl;
-
 			//generate response
 			parse_request();
 			if (request.getMethod() == "POST")
@@ -119,7 +116,6 @@ bool Client::send_data(std::vector<pollfd> *pfds, int pfd_i)
 		return false;
 	}
 	send_buf.erase(0, bytes_sent);
-	
 
 	if (send_buf.empty())
 	{	

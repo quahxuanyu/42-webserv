@@ -416,30 +416,12 @@ int main(int argc, char **argv)
 	// if (argc != 2)
 	// 	return (std::cout << "Incorrect number of arguments" << std::endl, 2);
 	std::vector<Server> servers = parseConfigFile(argv[1]);
-	std::map<std::pair<std::string, std::string>, std::vector<Server> > addr_server;
-	for (std::vector<Server>::iterator itr = servers.begin(); itr != servers.end(); ++itr)
-	{
-		std::pair<std::string, std::string> addr(itr->getIp(), itr->getPort());
-		addr_server[addr].push_back(*itr);
-	}
-	std::map<std::pair<std::string, std::string>, std::vector<Server> >::iterator itr ;
-	for (itr = addr_server.begin(); itr != addr_server.end(); ++itr)
-	{
-		const std::string &ip = itr->first.first;
-		const std::string &port = itr->first.second;
-		int socket_fd = get_listener_socket(ip, port);
 
-		BindSocket socket;
-		socket.sockfd = socket_fd;
-		socket.ip = ip;
-		socket.port = port;
-		socket.servers = itr->second;
+	Connection connection(servers);
 
-		listening_sockets.push_back(socket);
-	}
     try 
 	{
-		runServers(listening_sockets);
+		//runServers(listening_sockets);
 		// for (size_t i = 0; i < servers.size(); i++)
         // {
 		// 	Server server = servers[i]
