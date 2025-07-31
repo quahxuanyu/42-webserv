@@ -14,6 +14,27 @@ std::string read_file(std::ifstream &src) {
     return (content);
 }
 
+//find the longest matching location block path
+const Location* matchLocation(const std::vector<Location>& locations, const std::string& uri)
+{
+    const Location* best_match = NULL;
+    size_t best_len = 0;
+
+    for (size_t i = 0; i < locations.size(); i++)
+    {
+        const std::string& path = locations[i].getPath(); // e.g., "/static/"
+        if (uri.find(path) == 0)
+        { // starts with path
+            if (path.length() > best_len)
+            {
+                best_match = &locations[i];
+                best_len = path.length();
+            }
+        }
+    }
+
+    return best_match; // may be nullptr if no match
+}
 /**
  * @brief Reads the content of a file and sets it in the response body.
  */
@@ -28,40 +49,53 @@ void process_request(Server &server, Response &response, Request &request) {
     // else
     //     file_path = "." + uri; //wrong
 
-    //match location block
-    Location location;
-    int matchedIndex = -1;
+
     std::vector<Location> locations = server.getLocations();
-    for (size_t i = 0; i < locations.size(); i++)
+    const Location *location = matchLocation(locations, uri);
+
+    if (location == NULL)
+        file_path = server.getPage(404);
+
+    if (location->hasRoot() || location->hasAlias() || server.hasRoot())
     {
-        if (locations[i].getPath() == uri)
-        {
-            //matchedIndex = i;
-            location = locations[i];
-            file_path = locations[i].getIndex();                    
-            break;
+        if (location->hasRoot())
+            file_path = location->getRoot() + uri;
+        else if (location->hasAlias())
+        {   
+            //get substring after location path (replace location path)
+            std::string suffix = uri.substr(location->getPath().length());
+            file_path = location->getAlias() + suffix;
         }
-    }
-    if (matchedIndex == -1)
-        file_path = server.getPage(404);  //else set return page to 404
-
-    if (location.hasRedirectUrl())
-        //handle redirection
-    // else if (location.cgi)
-    //     //handle cgi
-    if 
-    else if (location.hasIndex())
-    {
-        if (location.hasRoot())
-            file_path = location.getRoot() + location.getIndex();
-        else if (location.hasAlias())
-            file_path = location.getAlias() + location.getIndex();
         else if (server.hasRoot())
+            file_path = server.getRoot() + uri;
+        else //not sure
+            file_path = server.getPage(404);
     }
-    else if (location.autoindex)
-    else{
 
+    /*  CGI  */
+    
+    else if (isDirectory(file_path))
+    {  
+        if (location->hasRedirectUrl())
+        {
+            //handle redirection
+        }
+        else if (location->hasIndex())
+        {
+            file_path += location->getIndex();
+            if (!isFile(file_path))
+                file_path = server.getPage(404);
+        }
+        else if (location->autoindex)
+        {
+            //handle autoindex
+        }
+        else //what to return?
+            file_path = server.getPage(404);
     }
+    //if client reeuqest invalid file uri
+    else if (!isFile(file_path))
+        file_path = server.getPage(404);
 
     std::ifstream src(file_path.c_str(), std::ios::binary);
     if (!src) {
