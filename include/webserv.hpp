@@ -30,8 +30,8 @@
 #include <sys/wait.h>
 
 //HTTP_REQUEST_HANDLER
-Response &handle_get_request(std::vector<Server> &servers, Request &request); // Handles GET requests and returns a Response object
-Response &handle_post_request(Request &request); // Handles POST requests and returns a Response object
+Response &handle_get_request(Server &server, Request &request); // Handles GET requests and returns a Response object
+Response &handle_post_request(Server &server, Request &request); // Handles POST requests and returns a Response object
 Response &generate_response(std::vector<Server> &servers, Request &request);	 // Processes the request and returns a Response object
 #define BLACK     "\033[0;30m"
 #define RED       "\033[0;31m"
@@ -43,6 +43,8 @@ Response &generate_response(std::vector<Server> &servers, Request &request);	 //
 #define RESET		"\033[0m"
 
 extern std::map<int, std::vector<Server> > socket_to_servers;  // listen_fd -> matching Server blocks
+extern std::map<int, std::string> httpErrorMessages; 
+std::map<int, std::string> createErrorMap();
 
 // HELPER.CPP
 std::string to_string(int value); // Converts an integer to a string
@@ -64,5 +66,8 @@ Response &parse_cgi_response(std::string cgi_response);
 bool isFile(const std::string &path);
 bool isDirectory(const std::string &path);
 bool isFileNoCwd(const std::string &path);
+const Location* matchLocation(const std::vector<Location>& locations, const std::string& uri);
+std::string read_file(std::ifstream &src);
+void handle_response_error(Response &response, std::string path, int error_code);
 
 #endif

@@ -19,6 +19,7 @@ class Server {
 		std::vector<Location> _locations;  //location configs
 		std::vector<pollfd> _pfds;  //list of fd the poll is watching
 		std::map<int, Client> _clients;   //map of {fd : client}
+		std::map<int, std::string> status_codes;  // status code -> status msg
 		//int _fd_count;
 
 		
@@ -31,8 +32,7 @@ class Server {
 		void setBodySize(long size);
 		void setErrorPage(int status, std::string page);
 		void addLocation(Location location);
-		
-		
+
 		// void accept_connection(int _listener_fd);
 		// void close_connection(int pfd_i);
 

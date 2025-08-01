@@ -286,8 +286,6 @@ void checkTokens(std::vector<std::string> tokens)
 	checkDirectives(tokens);
 
 	checkSemicolons(tokens);
-	
-
 }
 
 

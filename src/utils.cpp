@@ -35,3 +35,56 @@ bool isDirectory(const std::string &path)
 		return true;
 	return false;
 }
+
+//find the longest matching location block path
+const Location* matchLocation(const std::vector<Location>& locations, const std::string& uri)
+{
+	const Location* best_match = NULL;
+	size_t best_len = 0;
+
+	for (size_t i = 0; i < locations.size(); i++)
+	{
+		const std::string& path = locations[i].getPath();
+		//handle file/dir URI
+		if (uri.find(path) == 0)
+		{ // starts with path
+			if (path.length() > best_len)
+			{
+				best_match = &locations[i];
+				best_len = path.length();
+			}
+		}
+	}
+	return best_match; // may be null if no match
+}
+
+std::string read_file(std::ifstream &src) {
+    std::string content;
+    std::string line;
+
+    while (std::getline(src, line)) { // Loop through each line of the file
+        content += line;
+
+        if (!src.eof()) { // Only add a newline if it's not the last line
+            content += "\n";
+        }
+    }
+    return (content);
+}
+
+std::map<int, std::string> createErrorMap() {
+    std::map<int, std::string> m;
+    m[400] = "Bad Request";
+    m[401] = "Unauthorized";
+    m[403] = "Forbidden";
+    m[404] = "Not Found";
+    m[405] = "Method Not Allowed";
+    m[411] = "Length Required";
+    m[413] = "Payload Too Large";
+    m[500] = "Internal Server Error";
+    m[501] = "Not Implemented";
+    m[504] = "Gateway Timeout";
+    m[505] = "HTTP Version Not Supported";
+    return m;
+}
+std::map<int, std::string> httpErrorMessages = createErrorMap();
