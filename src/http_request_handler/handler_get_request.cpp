@@ -49,7 +49,7 @@ void process_request(Response &response, Request &request) {
 
 Response &handle_get_request(Request &request) {
 
-    //**CHECKING WITH THE LOCATION BLOCKS**/
+    //**CHECKING WITH THE LOCATION BLOCKS AND CORRECTS THE FILE_PATH**/
         // 1. See if match with any location block
         // ---- check all directives
         // - CGI
