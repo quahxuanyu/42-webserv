@@ -9,7 +9,7 @@
 
 class Server {
 	private:
-		int _listener_fd;  //listener's socket fd
+		//int _listener_fd;  //listener's socket fd
 		std::string _IP;  //IP to bind
 		std::string _port;	//port listening to
 		std::string _server_name; 
@@ -19,7 +19,7 @@ class Server {
 		std::vector<Location> _locations;  //location configs
 		std::vector<pollfd> _pfds;  //list of fd the poll is watching
 		std::map<int, Client> _clients;   //map of {fd : client}
-		int _fd_count;
+		//int _fd_count;
 
 		
 		

@@ -44,6 +44,7 @@ class Location {
 		std::string getAlias() const;
 		std::string getIndex() const;
 		std::string getPath() const;
+	
 
 
 		void printInfo() const;

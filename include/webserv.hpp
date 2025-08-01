@@ -63,4 +63,6 @@ Response &parse_cgi_response(std::string cgi_response);
 
 bool isFile(const std::string &path);
 bool isDirectory(const std::string &path);
+bool isFileNoCwd(const std::string &path);
+
 #endif

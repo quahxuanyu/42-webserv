@@ -55,7 +55,8 @@ void Connection::close_connection(int pfd_i)
 	_clients.erase(fd);	//remove client from map
 	close(fd);	//close client fd
 
-	_pfds[pfd_i] = _pfds[_fd_count - 1];	//replace it with the last pfds (efficiency)
+	// _pfds[pfd_i] = _pfds[_fd_count - 1];	//replace it with the last pfds (efficiency)
+	_pfds.erase(_pfds.begin() + pfd_i);
 	_fd_count--;
 }
 
@@ -72,8 +73,6 @@ void Connection::handle_client_write(int pfd_i)
 	if (!_clients[client_fd].send_data(&_pfds, pfd_i))
 		close_connection(pfd_i);
 }
-
-
 
 int Connection::get_listener_socket(const std::string &ip, const std::string &port)
 {

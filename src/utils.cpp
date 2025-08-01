@@ -10,7 +10,7 @@ bool isFile(const std::string &path)
 	std::string const cwd_str = cwd;
 
 	std::string ab_path = (cwd_str + path);
-	// std::cout << MAGENTA << "path:" << ab_path << RESET << std::endl;
+	std::cout << MAGENTA << "path:" << ab_path << RESET << std::endl;
 
 	struct stat sb;
 	if (stat(ab_path.c_str(), &sb) == 0 && S_ISREG(sb.st_mode))
@@ -18,9 +18,18 @@ bool isFile(const std::string &path)
 	return false;
 }
 
+bool isFileNoCwd(const std::string &path)
+{
+	std::cout << MAGENTA << "file path : " << path << RESET << std::endl;
+	struct stat sb;
+	if (stat(path.c_str(), &sb) == 0 && S_ISREG(sb.st_mode))
+		return true;
+	return false;
+}
+
 bool isDirectory(const std::string &path)
 {
-	
+	std::cout << MAGENTA << "dir path : " << path << RESET << std::endl;
 	struct stat sb;
 	if (stat((path).c_str(), &sb) == 0 && S_ISDIR(sb.st_mode))
 		return true;
