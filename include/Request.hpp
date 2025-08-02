@@ -11,8 +11,7 @@ class Request {
 		std::string _version;
 		std::map<std::string, std::string> _headers;
 		std::string _body;
-		
-		
+
 	public:
 		bool has_body;
 		Request();
@@ -31,6 +30,7 @@ class Request {
 		const std::map<std::string, std::string> &getHeaders() const;
 		const std::string &getHeader(std::string key) const;
 		const std::string &getBody() const;
+
 		void printRequest() const;
 
 };

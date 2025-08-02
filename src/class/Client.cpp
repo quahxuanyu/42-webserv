@@ -5,6 +5,7 @@ Client::Client() {}
 
 Client::Client(int fd) : _fd(fd) {}
 
+
 void Client::parse_request()
 {
 	size_t line_end = recv_buf.find("\r\n");
@@ -22,12 +23,9 @@ void Client::parse_request()
 	request.setUri(uri);
 	request.setVersion(version);
 
-	size_t body_start = recv_buf.find("\r\n\r\n");
-	size_t content_length = atoi(request.getHeader("Content-Length").c_str());
-	std::string body = recv_buf.substr(body_start + 4, content_length);
-	request.setBody(body);
-
 	size_t line_start = line_end + 2;
+
+	//store headers
 	while (1)
 	{
 		line_end = recv_buf.find("\r\n", line_start);
@@ -44,7 +42,36 @@ void Client::parse_request()
 
 		line_start = line_end + 2;
 	}
-	// request.printRequest();
+
+	size_t body_start = recv_buf.find("\r\n\r\n");
+	size_t content_length = atoi(request.getHeader("Content-Length").c_str());
+	std::string body = recv_buf.substr(body_start + 4, content_length);
+	request.setBody(body);
+
+	request.printRequest();
+}
+
+//check for existing session or create a new session
+//increment to visit count
+void Client::getSession()
+{
+	std::string cookie = request.getHeader("Cookie");
+	std::string session_id = extractSessionID(cookie);
+
+	//both assign session to client
+	if (!session_id.empty() && sessions.count(session_id))
+	{
+		//store in client
+		_session_id = session_id;
+		_session = sessions[session_id];
+		_session->_visit_count += 1;
+	}
+	else{ //generate new session, add to map
+		session_id = generateSessionID();
+		_session_id = session_id;
+		sessions[session_id] = &createSession(request);
+		_session = sessions[session_id];
+	}
 }
 
 bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
@@ -73,17 +100,30 @@ bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
 			std::cout << BLUE << "recv_data:" << recv_buf << RESET <<std::endl; 
 			parse_request();
 			if (request.getMethod() == "POST")
-			{	
-				
+			{
 				size_t first_sep = recv_buf.find("\r\n\r\n");
 				std::string body = recv_buf.substr(first_sep + 4);
 				size_t content_length = atoi(request.getHeader("Content-Length").c_str());
-				// std::cout << BLUE << "receiving Data!" << RESET << std::endl;
 
 				if (body.length() >= content_length)
 				{
 					std::cout << GREEN << "Finished Receiving Data!" << RESET << std::endl;
+	
+					getSession();
 					response = generate_response(socket_to_servers[socket_fd], request);
+
+					//add cookie to response
+					response.addHeader("Set-Cookie", "session_id=" + _session_id);
+					
+					//update body html based on client's session data
+					std::string body = response.getBody();
+					body = replaceAll(body, "{{VISIT_COUNT}}", "1");
+					body = replaceAll(body, "{{USERNAME}}", _session->_data["username"]);
+					response.setBody(body);
+
+					//update content length
+					response.addHeader("Content-Length", to_string(response.getBody().length()));
+
 					send_buf = response.toString();
 					std::cout << "RESPONSE:\n" << send_buf << std::endl;
 					recv_buf.clear();
@@ -94,7 +134,15 @@ bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
 			}
 			else
 			{
+				getSession();
 				response = generate_response(socket_to_servers[socket_fd], request);
+
+				//add cookie to response
+				response.addHeader("Set-Cookie", "session_id=" + _session_id);
+
+				//update content length
+				response.addHeader("Content-Length", to_string(response.getBody().length()));
+
 				send_buf = response.toString();
 				recv_buf.clear();
 				//allow send()

@@ -94,7 +94,9 @@ std::map<int, std::string> Server::getErrorPages() const
 
 std::string Server::getPage(int error_code) const
 {
+
 	return _error_pages.at(error_code);
+
 }
 
 std::string Server::getServerName() const

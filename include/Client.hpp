@@ -23,19 +23,26 @@ class Client {
 		Request request;	//store HTTP request (obj)
 		Response response;
 		
-		time_t last_activity;	//timeout handling
-		bool header_parsed;		//check if header has fully received
-		bool keep_alive;	//check if the connection should be closed
+		// time_t last_activity;	//timeout handling
+		// bool header_parsed;		//check if header has fully received
+		// bool keep_alive;	//check if the connection should be closed
+
+		// USER DATA //
+		std::string _session_id;
+		Session *_session;
 
 	public:
 		int socket_fd;		//server that client connects to 
 		bool recv_data(std::vector<pollfd> *pfds, int pfd_i);
 		bool send_data(std::vector<pollfd> *pfds, int pfd_i);
 		void parse_request();
+		//void store_data();
+		void getSession();
 		// void generate_response();
-		bool is_time_out();
+		//bool is_time_out();
 
-	public:
+		//std::string getData(const std::string key);
+
 		Client();
 		Client(int fd);
 };

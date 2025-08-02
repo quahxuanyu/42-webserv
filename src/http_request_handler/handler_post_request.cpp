@@ -25,9 +25,11 @@ Response &handle_post_request(Server &server, Request &request)
 		return *response;
 	}
 
+	
 	// Check if request is a CGI request
 	else if (request.getUri().find(".cgi") != std::string::npos)
 	{
+		printf("\nDEBUGGGGGG\n");
 		delete response;
 		std::string cgi_response = cgi(request); // Execute the CGI script
 
@@ -43,11 +45,12 @@ Response &handle_post_request(Server &server, Request &request)
 	}
 	else 
 	{
+		return parse_noncgi_response();
 		// Handle non-CGI POST requests **TEMPORARY**
-		delete response;
-		Response *response = new Response("HTTP/1.1", 200, "OK");
-		set_headers(*response, request);
-		response->setBody("POST request received.");
-		return *response;
+		// delete response;
+		// Response *response = new Response("HTTP/1.1", 200, "OK");
+		// set_headers(*response, request);
+		// response->setBody("POST request received.");
+		// return *response;
 	}
 }

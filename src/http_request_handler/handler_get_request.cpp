@@ -17,7 +17,7 @@ std::string getPath(const Server &server, const Location *location, std::string 
 		{
 			//get substring after location path (replace location path)
 			std::string suffix = uri.substr(location->getPath().length());
-			file_path = location->getAlias() + suffix;
+			file_path = location->getAlias() + "/" + suffix;
 		}
 		else if (server.hasRoot())
 			file_path = server.getRoot() + uri;
@@ -51,13 +51,14 @@ std::string getPath(const Server &server, const Location *location, std::string 
 
 void handle_response_error(Response &response, std::string path, int error_code)
 {
+	response.setPath(path);
 	if (path[0] == '/')
         path = "." + path;
 	std::ifstream src(path.c_str(), std::ios::binary);
-	response.setStatusCode(error_code);
-	response.setStatusMessage(httpErrorMessages[error_code]);
 	response.setBody(read_file(src));
 	src.close();
+	response.setStatusCode(error_code);
+	response.setStatusMessage(httpErrorMessages[error_code]);
 	return ;
 }
 
@@ -80,18 +81,17 @@ void process_get_request(const Server &server, Response &response, Request &requ
 	const Location *location = matchLocation(locations, uri);
 
 	if(!location->getMethods().count("GET"))
-	{	
 		return (handle_response_error(response, server.getPage(405), 405));
-	}
 	else
 	{	
 		file_path = getPath(server, location, uri);
+		response.setPath(file_path);
 		if (file_path.empty())
 			return (handle_response_error(response, server.getPage(404), 404));
 	}
 
-    if (file_path[0] == '/')
-    {    file_path = "." + file_path;}
+    // if (file_path[0] == '/')
+    // {    file_path = "." + file_path;}
 
 	std::cout << CYAN << "Path : " << file_path << RESET << std::endl;
 

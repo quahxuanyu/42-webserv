@@ -44,7 +44,15 @@ Response &generate_response(std::vector<Server> &servers, Request &request);	 //
 
 extern std::map<int, std::vector<Server> > socket_to_servers;  // listen_fd -> matching Server blocks
 extern std::map<int, std::string> httpErrorMessages; 
+extern std::map<std::string, Session> sessions;
 std::map<int, std::string> createErrorMap();
+
+
+
+struct Session {
+	std::map<std::string, std::string> _data;
+	int _visit_count;
+};
 
 // HELPER.CPP
 std::string to_string(int value); // Converts an integer to a string
@@ -60,6 +68,8 @@ std::string cgi(Request &request);
 std::string get_content_type(const std::string &cgi_output); // Extracts the Content
 std::string get_body(const std::string &cgi_output); // Extracts the body from
 Response &parse_cgi_response(std::string cgi_response);
+Response &parse_noncgi_response();
+
 
 
 
@@ -69,5 +79,9 @@ bool isFileNoCwd(const std::string &path);
 const Location* matchLocation(const std::vector<Location>& locations, const std::string& uri);
 std::string read_file(std::ifstream &src);
 void handle_response_error(Response &response, std::string path, int error_code);
+std::string replaceAll(std::string str, const std::string &src, const std::string &target);
+std::string extractSessionID(std::string cookie);
+std::string  generateSessionID();
+Session createSession(Request request);
 
 #endif
