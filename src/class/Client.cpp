@@ -96,6 +96,7 @@ bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
 			}
 			else
 			{
+				request.printRequest();
 				response = generate_response(request);
 				send_buf = response.toString();
 				recv_buf.clear();

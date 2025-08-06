@@ -74,6 +74,13 @@ Response &handle_get_request(Request &request) {
 			return parse_cgi_response(cgi_response); // Parse the CGI response and return it
 		}
 	}
+    else if (request.getUri().find("/storage") != std::string::npos)  // Check if the request is for the storage directory
+    {
+        std::cout << BLUE << "Got Into Storage" << std::endl;
+        Response *response = new Response();
+        autoindex(*response, request, "/home/quahxuanyu/42KL/42-webserv/cgi-bin/storage"); // **TEMPORARY access storage folder
+		return *response;
+    }
 	else
 	{
 		// Handle non-CGI GET requests (read and return contents of the file)

@@ -15,6 +15,8 @@
 #include <cstring>
 #include <unistd.h>
 #include <cstdlib>
+#include <dirent.h>
+#include <algorithm>
 // #include <thread>
 
 #include "Request.hpp"
@@ -55,4 +57,7 @@ std::string cgi(Request &request);
 std::string get_content_type(const std::string &cgi_output); // Extracts the Content
 std::string get_body(const std::string &cgi_output); // Extracts the body from
 Response &parse_cgi_response(std::string cgi_response);
+
+// AUTOINDEX.CPP
+void autoindex(Response &response, Request &request, std::string dir_path);
 #endif
