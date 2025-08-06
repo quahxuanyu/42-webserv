@@ -25,7 +25,7 @@ class Server;
 class Client {
 	private:
 		int _fd;		//client socket fd
-		int _port;		//port used by client;
+		//int _port;		//port used by client;
 		std::string _IP;		//client IP addr
 		std::string recv_buf;	//store incoming request data
 		std::string send_buf;	//store outgoing response

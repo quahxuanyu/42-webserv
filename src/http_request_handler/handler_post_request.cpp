@@ -25,7 +25,6 @@ Response &handle_post_request(Server &server, Request &request)
 		return *response;
 	}
 
-	
 	// Check if request is a CGI request
 	else if (request.getUri().find(".cgi") != std::string::npos)
 	{

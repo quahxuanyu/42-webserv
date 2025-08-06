@@ -12,15 +12,17 @@ class Request {
 		std::map<std::string, std::string> _headers;
 		std::string _body;
 		bool _hasHeader;
+		bool _isBad;
 		
 
 	public:
-		bool _isbad;
 		bool has_body;
 		Request();
 		Request(std::string method, std::string uri, std::string version);
 		~Request();
 
+
+		void setisBad(bool is);
 		void sethasHeader(bool has);
 		void setMethod(const std::string method);
 		void setUri(const std::string uri);
@@ -28,6 +30,7 @@ class Request {
 		void addHeader(const std::string key, const std::string value);
 		void setBody(const std::string body);
 
+		const bool &isBad() const;
 		const bool &hasHeader() const;
 		const std::string &getMethod() const;
 		const std::string &getUri() const;

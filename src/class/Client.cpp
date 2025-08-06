@@ -11,15 +11,16 @@ void Client::parse_request()
 {
 	/* PARSE REQUEST LINE */
 	size_t line_end = recv_buf.find("\r\n"); 
+	if (line_end == std::string::npos)
+		return request.setisBad(true);
 	std::string line = recv_buf.substr(0, line_end);
 	std::stringstream stream(line);
 	std::string method, uri, version;
 	if (!(stream >> method >> uri >> version)) //skip space and asign to string
-		request._isbad = 1;
-	else {
+		return request.setisBad(true);
 	request.setMethod(method);
 	request.setUri(uri);
-	request.setVersion(version);}
+	request.setVersion(version);
 
 	/* PARSE HEADERS */
 	std::istringstream header_stream(recv_buf.substr(line_end + 2)); // get the substr from the end of request line

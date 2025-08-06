@@ -2,6 +2,7 @@
 
 Response &generate_response(std::vector<Server> &servers, Request &request)
 {
+	
 	//Find matching server
 	Server server = servers[0];
 	std::cout << "request host: " << request.getHeader("Host") << std::endl;
@@ -13,6 +14,12 @@ Response &generate_response(std::vector<Server> &servers, Request &request)
 			if (servers[i].getServerName() == request.getHeader("Host"))
 				server = servers[i];
 		}
+	}
+	if (request.isBad())
+	{
+		Response *response = new Response();
+		handle_response_error(*response, server.getPage(400), 400);
+		return *response;
 	}
 	if (request.getMethod() == "GET") {
 		return handle_get_request(server, request);
