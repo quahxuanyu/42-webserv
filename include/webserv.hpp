@@ -49,10 +49,7 @@ std::map<int, std::string> createErrorMap();
 
 
 
-struct Session {
-	std::map<std::string, std::string> _data;
-	int _visit_count;
-};
+
 
 // HELPER.CPP
 std::string to_string(int value); // Converts an integer to a string
@@ -82,6 +79,10 @@ void handle_response_error(Response &response, std::string path, int error_code)
 std::string replaceAll(std::string str, const std::string &src, const std::string &target);
 std::string extractSessionID(std::string cookie);
 std::string  generateSessionID();
-Session createSession(Request request);
+Session createSession(Request &request);
+void updateSession(Session *session, Request &request);
 
+void printSessionData(Session &Session);
+void printAllSessionData();
+std::string trim (std::string str);
 #endif

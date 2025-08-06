@@ -18,6 +18,15 @@ std::string replaceAll(std::string str, const std::string &src, const std::strin
 	return str;
 }
 
+std::string trim (std::string str)
+{
+	size_t start = str.find_first_not_of(" \t\n\r");
+	if (start == std::string::npos)
+		return "";
+	size_t end = str.find_last_not_of(" \t\n\r");
+	return str.substr(start, end - start + 1);
+}
+
 /**
  * @brief Gets the current time in GMT format.
  */
@@ -87,17 +96,25 @@ std::string extractSessionID(std::string cookie)
 {
 	std::istringstream stream(cookie);
 	std::string token;
-	while(std::getline(stream, token, ';'))
+	while(std::getline(stream, token, ';')) // if no coockie, loop ends
 	{
-		size_t pos = token.find("session_id");
+		// Remove leading spaces (common in cookies)
+		token.erase(0, token.find_first_not_of(" \t"));
+
+		size_t pos = token.find('=');
 		if (pos != std::string::npos)
-			return (token.substr(pos + 11));
+		{
+			std::string key = token.substr(0, pos);
+			std::string value = token.substr(pos + 1);
+			if (key == "session_id")
+				return value;
+		}
 	}
 	return "";
 }
 
 //generate a string of 50 random char
-std::string generateSessionId()
+std::string generateSessionID()
 {
 	static const char alphanum[] =
 	"0123456789"
@@ -132,7 +149,7 @@ Response &parse_noncgi_response()
 	return *response;
 }
 
-Session createSession(Request request)
+Session createSession(Request &request)
 {
 	Session session;
 	std::string body = request.getBody();
@@ -141,6 +158,7 @@ Session createSession(Request request)
 	//get request has no body
 	if (body.empty())
 		return session;
+	
 	std::istringstream stream(body);
 	std::string pair;
 	while (std::getline(stream, pair, '&'))
@@ -153,7 +171,48 @@ Session createSession(Request request)
 			session._data[key] = value;
 		}
 	}
-	//std::cout << RED << session._data["username"] << RESET <<std::endl; 
+	std::cout << RED << session._data["username"] << RESET <<std::endl; 
 	return session;
 }
+
+//
+void updateSession(Session *session, Request &request)
+{
+	std::string body = request.getBody();
+	std::istringstream stream(body);
+	std::string pair;
+	printSessionData(*session);
+
+	while (std::getline(stream, pair, '&'))
+	{
+		size_t equal = pair.find('=');
+		if (equal != std::string::npos)
+		{
+			std::string key = pair.substr(0, equal);
+			std::string value = pair.substr(equal + 1);
+			session->_data[key] = value;
+		}
+	}
+	session->_visit_count += 1;
+	printSessionData(*session);
+}
+
+void printAllSessionData()
+{
+	std::cout << "==== SESSSIONSSSS ====" << std::endl;
+	std::map<std::string, Session>::iterator i;
+	for (i = sessions.begin(); i != sessions.end(); ++i)
+	{
+		std::cout << "Session id: [" << i->first << "]" << std::endl;
+		std::cout << RED << "USERNAME: " << i->second._data["username"] << RESET <<std::endl; 
+		std::cout << RED << "VISIT COUNT: " << i->second._visit_count << RESET <<std::endl; 
+	}
+}
+
+void printSessionData(Session &session)
+{
+	std::cout << RED << "USERNAME: " << session._data["username"] << RESET <<std::endl; 
+	std::cout << RED << "VISIT COUNT: " << session._visit_count << RESET <<std::endl; 
+}
+
 

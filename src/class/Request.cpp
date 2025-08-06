@@ -9,6 +9,10 @@ Request::~Request() {}
 
 
 //Setters
+void Request::sethasHeader(bool has) {
+	_hasHeader = has;
+}
+
 void Request::setMethod(const std::string method) {
 	_method = method;
 }
@@ -30,6 +34,11 @@ void Request::setBody(const std::string body) {
 }
 
 //GETTERS
+
+const bool &Request::hasHeader() const {
+	return _hasHeader;
+}
+
 const std::string &Request::getMethod() const {
 	return _method;
 }

@@ -3,12 +3,21 @@
 
 #include "Request.hpp"
 #include "Response.hpp"
+
 #include <iostream>
 #include <vector>
 #include <poll.h>
 #include <netdb.h> // addrinfo 
 #include <cstring>
 #include <unistd.h>
+
+
+struct Session {
+	bool logged_in;
+	std::map<std::string, std::string> _data;
+	int _visit_count;
+};
+
 
 
 class Server;
@@ -32,6 +41,8 @@ class Client {
 		Session *_session;
 
 	public:
+		void addSessionData();
+		void processRequest(std::vector<pollfd> *pfds, int pfd_i);
 		int socket_fd;		//server that client connects to 
 		bool recv_data(std::vector<pollfd> *pfds, int pfd_i);
 		bool send_data(std::vector<pollfd> *pfds, int pfd_i);
