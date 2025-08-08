@@ -7,43 +7,43 @@ Client::Client() {}
 
 Client::Client(int fd) : _fd(fd) {}
 
-void Client::parse_request()
-{
-	/* PARSE REQUEST LINE */
-	size_t line_end = recv_buf.find("\r\n"); 
-	if (line_end == std::string::npos)
-		return request.setisBad(true);
-	std::string line = recv_buf.substr(0, line_end);
-	std::stringstream stream(line);
-	std::string method, uri, version;
-	if (!(stream >> method >> uri >> version)) //skip space and asign to string
-		return request.setisBad(true);
-	request.setMethod(method);
-	request.setUri(trimTrailingSlash(uri));
-	request.setVersion(version);
+// void Client::parse_request()
+// {
+// 	/* PARSE REQUEST LINE */
+// 	size_t line_end = recv_buf.find("\r\n"); 
+// 	if (line_end == std::string::npos)
+// 		return request.setisBad(true);
+// 	std::string line = recv_buf.substr(0, line_end);
+// 	std::stringstream stream(line);
+// 	std::string method, uri, version;
+// 	if (!(stream >> method >> uri >> version)) //skip space and asign to string
+// 		return request.setisBad(true);
+// 	request.setMethod(method);
+// 	request.setUri(trimTrailingSlash(uri));
+// 	request.setVersion(version);
 
-	/* PARSE HEADERS */
-	std::istringstream header_stream(recv_buf.substr(line_end + 2)); // get the substr from the end of request line
-	std::string header_line;
-	while (std::getline(header_stream, header_line, '\n'))
-	{
-		size_t split_pos = header_line.find(':');
-		if (split_pos == std::string::npos)
-			continue;
-		std::string key = trim(header_line.substr(0, split_pos));
-		std::string value = trim(header_line.substr(split_pos + 1));
-		request.addHeader(key, value);
-	}
+// 	/* PARSE HEADERS */
+// 	std::istringstream header_stream(recv_buf.substr(line_end + 2)); // get the substr from the end of request line
+// 	std::string header_line;
+// 	while (std::getline(header_stream, header_line, '\n'))
+// 	{
+// 		size_t split_pos = header_line.find(':');
+// 		if (split_pos == std::string::npos)
+// 			continue;
+// 		std::string key = trim(header_line.substr(0, split_pos));
+// 		std::string value = trim(header_line.substr(split_pos + 1));
+// 		request.addHeader(key, value);
+// 	}
 
-	/* PARSE BODY */
-	size_t body_start = recv_buf.find("\r\n\r\n");
-	size_t content_length = atoi(request.getHeader("Content-Length").c_str());
-	std::string body = recv_buf.substr(body_start + 4, content_length);
-	request.setBody(body);
+// 	/* PARSE BODY */
+// 	size_t body_start = recv_buf.find("\r\n\r\n");
+// 	size_t content_length = atoi(request.getHeader("Content-Length").c_str());
+// 	std::string body = recv_buf.substr(body_start + 4, content_length);
+// 	request.setBody(body);
 
-	/* CHECK REQUEST */
-	request.printRequest();
-}
+// 	/* CHECK REQUEST */
+// 	request.printRequest();
+// }
 
 
 //check for existing session or create a new session
@@ -228,7 +228,7 @@ bool Client::send_data(std::vector<pollfd> *pfds, int pfd_i)
 }
 
 
-/* void Client::parse_request()
+void Client::parse_request()
 {
 	// get request line
 	size_t line_end = recv_buf.find("\r\n"); 
@@ -262,13 +262,11 @@ bool Client::send_data(std::vector<pollfd> *pfds, int pfd_i)
 		std::string header_line = recv_buf.substr(line_start, line_end - line_start);
 		size_t split_pos = header_line.find(':');
 
-		std::string key = header_line.substr(0, split_pos);
-		std::string value = header_line.substr(split_pos + 1);
+		std::string key = trim(header_line.substr(0, split_pos));
+		std::string value = trim(header_line.substr(split_pos + 1));
 		request.addHeader(key, value);
 
 		line_start = line_end + 2;
 	}
-
 	request.printRequest();
 }
- */
