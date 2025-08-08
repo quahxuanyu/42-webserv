@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login Page</title>
+</head>
+<body>
+  <h1>Welcome {{USERNAME}}</h1>
+
+  <!-- Username Form -->
+  <form action="/login" method="POST">
+    <label for="username">Enter your name:</label>
+    <input type="text" id="username" name="username">
+    <input type="submit" value="Submit">
+  </form>
+
+  <!-- Visit Count -->
+  <p>You have visited this page <strong>{{VISIT_COUNT}}</strong> times.</p>
+</body>
+</html>

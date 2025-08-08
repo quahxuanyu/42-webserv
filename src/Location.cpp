@@ -52,6 +52,15 @@ void Location::setRedirectUrl(std::string url)
 void Location::setCGI(int on)
 {
 	cgi = on;
+
+std::string Location::getRedirectUrl() const
+{
+	return _redirect_url;
+}
+
+size_t Location::getRedirectCode() const
+{
+	return _redirect_code;
 }
 
 bool Location::hasRoot () const
@@ -97,16 +106,7 @@ std::string Location::getPath() const
 {
 	return _path;
 }
-
-std::string Location::getRedirectUrl() const
-{
-	return _redirect_url;
-}
-
-size_t Location::getRedirectCode() const
-{
-	return _redirect_code;
-}
+		
 
 void Location::printInfo() const
 {

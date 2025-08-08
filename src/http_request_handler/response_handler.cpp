@@ -1,11 +1,31 @@
 #include "../../include/webserv.hpp"
 
-Response &generate_response(Request &request) {
+Response &generate_response(std::vector<Server> &servers, Request &request)
+{
+	
+	//Find matching server
+	Server server = servers[0];
+	std::cout << "request host: " << request.getHeader("Host") << std::endl;
+	if (servers.size() > 1)
+	{
+		for (size_t i = 0; i < servers.size(); i++)
+		{
+			std::cout << "server_name :" << servers[i].getServerName() << std::endl;
+			if (servers[i].getServerName() == request.getHeader("Host"))
+				server = servers[i];
+		}
+	}
+	if (request.isBad())
+	{
+		Response *response = new Response();
+		handle_response_error(*response, server.getPage(400), 400);
+		return *response;
+	}
 	if (request.getMethod() == "GET") {
-		return handle_get_request(request);
+		return handle_get_request(server, request);
 	}
 	else if (request.getMethod() == "POST") {
-		return handle_post_request(request);
+		return handle_post_request(server, request);
 	}
 	else
 	{

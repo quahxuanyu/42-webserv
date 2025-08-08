@@ -46,9 +46,6 @@ class Location {
 		std::string getPath() const;
 		std::string getRedirectUrl() const;
 		size_t getRedirectCode() const;
-	
-
-
 		void printInfo() const;
 };
 

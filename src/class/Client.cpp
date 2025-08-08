@@ -1,107 +1,205 @@
 #include "../../include/Client.hpp"
 #include "../../include/webserv.hpp"
 
+std::map<std::string, Session> sessions;
+
 Client::Client() {}
 
 Client::Client(int fd) : _fd(fd) {}
 
 void Client::parse_request()
 {
-	size_t line_end = recv_buf.find("\r\n");
+	/* PARSE REQUEST LINE */
+	size_t line_end = recv_buf.find("\r\n"); 
+	if (line_end == std::string::npos)
+		return request.setisBad(true);
 	std::string line = recv_buf.substr(0, line_end);
-
-	size_t first_space = line.find(' ');
-	std::string method = line.substr(0, first_space);
-
-	size_t second_space = line.find(' ', first_space + 1);
-	std::string uri = line.substr(first_space + 1, second_space - first_space - 1);
-
-	std::string version = line.substr(second_space + 1);
-
+	std::stringstream stream(line);
+	std::string method, uri, version;
+	if (!(stream >> method >> uri >> version)) //skip space and asign to string
+		return request.setisBad(true);
 	request.setMethod(method);
 	request.setUri(uri);
 	request.setVersion(version);
 
+	/* PARSE HEADERS */
+	std::istringstream header_stream(recv_buf.substr(line_end + 2)); // get the substr from the end of request line
+	std::string header_line;
+	while (std::getline(header_stream, header_line, '\n'))
+	{
+		size_t split_pos = header_line.find(':');
+		if (split_pos == std::string::npos)
+			continue;
+		std::string key = trim(header_line.substr(0, split_pos));
+		std::string value = trim(header_line.substr(split_pos + 1));
+		request.addHeader(key, value);
+	}
+
+	/* PARSE BODY */
 	size_t body_start = recv_buf.find("\r\n\r\n");
 	size_t content_length = atoi(request.getHeader("Content-Length").c_str());
 	std::string body = recv_buf.substr(body_start + 4, content_length);
 	request.setBody(body);
 
-	size_t line_start = line_end + 2;
-	while (1)
-	{
-		line_end = recv_buf.find("\r\n", line_start);
-
-		if (line_end == std::string::npos || line_end == line_start)
-			break;
-
-		std::string header_line = recv_buf.substr(line_start, line_end - line_start);
-		size_t split_pos = header_line.find(':');
-
-		std::string key = header_line.substr(0, split_pos);
-		std::string value = header_line.substr(split_pos + 1);
-		request.addHeader(key, value);
-
-		line_start = line_end + 2;
-	}
-	// request.printRequest();
+	/* CHECK REQUEST */
+	request.printRequest();
 }
 
-bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
-{
-	std::cout << YELLOW << "Server reading from fd " << (*pfds)[pfd_i].fd << RESET << std::endl;
-	char buf[256];
-	int nbytes = recv((*pfds)[pfd_i].fd, buf, sizeof(buf), 0);
-	int sender_fd = (*pfds)[pfd_i].fd;
 
+//check for existing session or create a new session
+//increment to visit count
+void Client::getSession()
+{
+	std::string cookie = request.getHeader("Cookie");
+	std::string session_id = extractSessionID(cookie);
+	//printAllSessionData();
+
+	//both assign session to client
+	if (!session_id.empty() && sessions.count(session_id))
+	{
+		std::cout << RED << "FOUND session id: " << session_id << RESET << std::endl;
+		//store in client
+		_session_id = session_id;
+		_session = &sessions[session_id];
+		updateSession(_session, request);
+		printSessionData(*_session);
+	}
+	else{ //generate new session, add to map
+		session_id = generateSessionID();
+		std::cout << RED << "CREATING new session id: " << session_id << RESET << std::endl;
+		_session_id = session_id;
+		sessions[session_id] = createSession(request);
+		_session = &sessions[session_id];
+	}
+}
+
+void Client::addSessionData()
+{
+	//add cookie to response
+	response.addHeader("Set-Cookie", "session_id=" + _session_id);
+
+	//update visit count
+	std::string body = response.getBody();
+	body = replaceAll(body, "{{VISIT_COUNT}}", to_string(_session->_visit_count));
+	body = replaceAll(body, "{{USERNAME}}", _session->_data["username"]);
+
+	response.setBody(body);
+
+	//update content length
+	response.addHeader("Content-Length", to_string(response.getBody().length()));
+
+}
+
+void Client::processRequest(std::vector<pollfd> *pfds, int pfd_i)
+{
+	request.printRequest();
+	std::cout << "Processing request" << std::endl;
+	getSession();
+	response = generate_response(socket_to_servers[socket_fd], request);
+	addSessionData();
+
+	send_buf = response.toString();
+	std::cout << "RESPONSE:\n" << send_buf << std::endl;
+	recv_buf.clear();
+	(*pfds)[pfd_i].events |= POLLOUT;
+	std::cout << "Processed request" << std::endl;
+}
+
+/* bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
+{
+	int sender_fd = (*pfds)[pfd_i].fd;
+	std::cout << YELLOW << "Server reading from fd " << sender_fd<< RESET << std::endl;
+	char buf[256];
+	int nbytes = recv(sender_fd, buf, sizeof(buf), 0);
+	
 	if (nbytes <= 0)
 	{
 		if (nbytes == 0)
 			std::cout << "pollserver: socket " << sender_fd << " hungup" << std::endl;
 		else
-			std::cerr << "Error : recv" << std::endl;
+			std::cerr << "Error : recv" << std::endl; //throw 
 		return false;
 	}
 	else
 	{
 		recv_buf.append(buf, nbytes);
-		// recv_buf += std::string(buf);
-		// std::cout << "[DEBUG] Current recv_buf content:\n" << recv_buf << std::endl;
-		if (recv_buf.find("\r\n\r\n") != std::string::npos )
+		if (!request.hasHeader())
 		{
+			//find the furst '\r\n' thgat indicates the end of header
+			size_t header_end = recv_buf.find("\r\n\r\n");
+			if (header_end != std::string::npos)
+			{
+				parse_request();
+				request.sethasHeader(true);
+				if (request.getMethod() == "GET")
+					processRequest(pfds, pfd_i);
+			}
+		}
+		else
+		{
+			if (request.getMethod() == "POST")
+			{
+				size_t body_start = recv_buf.find("\r\n\r\n");
+				std::string body = recv_buf.substr(body_start + 4); //exclude headers
+				size_t content_length = atoi(request.getHeader("Content-Length").c_str());
 
-			// std::cout << "Server : recv from fd " << sender_fd << ": \n - REQUEST -\n" << BLUE << recv_buf << RESET << std::endl;
+				//finish reading post request
+				if (body.length() >= content_length)
+				{	
+					request.setBody(recv_buf.substr(body_start + 4, content_length));
+					processRequest(pfds, pfd_i);
+				}
+			}
+			else
+				processRequest(pfds, pfd_i);
+		}
+		return true;
+	}
+} */
 
+bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
+{
+	int sender_fd = (*pfds)[pfd_i].fd;
+	std::cout << YELLOW << "Server reading from fd " << sender_fd<< RESET << std::endl;
+	char buf[256];
+	int nbytes = recv(sender_fd, buf, sizeof(buf), 0);
+	
+	if (nbytes <= 0)
+	{
+		if (nbytes == 0)
+			std::cout << "pollserver: socket " << sender_fd << " hungup" << std::endl;
+		else
+			std::cerr << "Error : recv" << std::endl; //throw 
+		return false;
+	}
+	else
+	{
+		recv_buf.append(buf, nbytes);
+
+		if (recv_buf.find("\r\n\r\n") != std::string::npos) // header parsed
+		{
 			//generate response
+			std::cout << BLUE << "recv_data:" << recv_buf << RESET << std::endl; 
 			parse_request();
 			if (request.getMethod() == "POST")
-			{	
-				// std::cout << BLUE << "recv_data:" << recv_buf << RESET <<std::endl; 
-				size_t first_sep = recv_buf.find("\r\n\r\n");
-				std::string body = recv_buf.substr(first_sep + 4);
+			{
+				size_t body_start = recv_buf.find("\r\n\r\n");
+				std::string body = recv_buf.substr(body_start + 4); //exclude headers
 				size_t content_length = atoi(request.getHeader("Content-Length").c_str());
-				// std::cout << BLUE << "receiving Data!" << RESET << std::endl;
 
+				//finish reading post request
 				if (body.length() >= content_length)
 				{
 					std::cout << GREEN << "Finished Receiving Data!" << RESET << std::endl;
-					response = generate_response(request);
-					send_buf = response.toString();
-					std::cout << "RESPONSE:\n" << send_buf << std::endl;
-					recv_buf.clear();
-					(*pfds)[pfd_i].events |= POLLOUT;
+					processRequest(pfds, pfd_i);
 				}
 				// std::cout << GREEN << "body length" <<body.length() << std::endl;
 				// std::cout << RED << "debug1 " << RESET << std::endl;
 			}
+			//finish reading get request
 			else
 			{
-				request.printRequest();
-				response = generate_response(request);
-				send_buf = response.toString();
-				recv_buf.clear();
-				//allow send()
-				(*pfds)[pfd_i].events |= POLLOUT;
+				processRequest(pfds, pfd_i);
 			}
 		}
 		return true;
@@ -120,7 +218,6 @@ bool Client::send_data(std::vector<pollfd> *pfds, int pfd_i)
 		return false;
 	}
 	send_buf.erase(0, bytes_sent);
-	
 
 	if (send_buf.empty())
 	{	
@@ -129,3 +226,49 @@ bool Client::send_data(std::vector<pollfd> *pfds, int pfd_i)
 	}
 	return true;
 }
+
+
+/* void Client::parse_request()
+{
+	// get request line
+	size_t line_end = recv_buf.find("\r\n"); 
+	std::string line = recv_buf.substr(0, line_end);
+
+	// get method
+	size_t first_space = line.find(' ');
+	std::string method = line.substr(0, first_space);
+
+	//get uri
+	size_t second_space = line.find(' ', first_space + 1);
+	std::string uri = line.substr(first_space + 1, second_space - first_space - 1);
+
+	//get version
+	std::string version = line.substr(second_space + 1);
+
+	request.setMethod(method);
+	request.setUri(uri);
+	request.setVersion(version);
+
+	size_t line_start = line_end + 2;
+
+	//store headers - split by '\r\n' - then ':'
+	while (1)
+	{
+		line_end = recv_buf.find("\r\n", line_start);
+
+		if (line_end == std::string::npos || line_end == line_start)
+			break;
+
+		std::string header_line = recv_buf.substr(line_start, line_end - line_start);
+		size_t split_pos = header_line.find(':');
+
+		std::string key = header_line.substr(0, split_pos);
+		std::string value = header_line.substr(split_pos + 1);
+		request.addHeader(key, value);
+
+		line_start = line_end + 2;
+	}
+
+	request.printRequest();
+}
+ */

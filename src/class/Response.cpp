@@ -8,6 +8,11 @@ Response::Response(std::string version, int statusCode, std::string statusMessag
 Response::~Response() {}
 
 // Setters
+
+void Response::setPath(const std::string path) {
+	_path = path;
+}
+
 void Response::setVersion(const std::string version) {
 	_version = version;
 }
@@ -27,6 +32,11 @@ void Response::setBody(const std::string body) {
 	_body = body;
 }
 // Getter
+
+const std::string &Response::getPath() const {
+	return _path;
+}
+
 const std::string &Response::getVersion() const {
 	return _version;
 }

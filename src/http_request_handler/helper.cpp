@@ -7,6 +7,26 @@ std::string to_string(int value) {
     return oss.str();
 }
 
+std::string replaceAll(std::string str, const std::string &src, const std::string &target)
+{
+	size_t start = 0;
+	while ((start = str.find(src, start))!= std::string::npos)
+	{
+		str.replace(start, src.length(), target);
+		start += src.length();
+	}
+	return str;
+}
+
+std::string trim (std::string str)
+{
+	size_t start = str.find_first_not_of(" \t\n\r");
+	if (start == std::string::npos)
+		return "";
+	size_t end = str.find_last_not_of(" \t\n\r");
+	return str.substr(start, end - start + 1);
+}
+
 /**
  * @brief Gets the current time in GMT format.
  */
@@ -47,12 +67,13 @@ std::string find_mime(std::string uri) {
  */
 void set_headers(Response &response, Request &request)
 {
+    (void)request;
 	if (response.getStatusCode() == 200)
 		response.addHeader("Connection", "keep-alive");
 	else
 		response.addHeader("Connection", "close");
     response.addHeader("Content-Length", to_string(response.getBody().length()));
-	response.addHeader("Content-Type", find_mime(request.getUri())); //**Might not be 100% correct */
+	response.addHeader("Content-Type", find_mime(response.getPath())); //**Might not be 100% correct */
 	response.addHeader("Date", get_current_time());
 	response.addHeader("Server", "Webserv/1.0"); // ** TEMPORARY, wait until config file is implemented **
 }
@@ -70,3 +91,128 @@ Response &parse_cgi_response(std::string cgi_response) {
 	response->addHeader("Server", "Webserv/1.0"); // ** TEMPORARY, wait until config file is implemented **
 	return *response;
 }
+
+std::string extractSessionID(std::string cookie)
+{
+	std::istringstream stream(cookie);
+	std::string token;
+	while(std::getline(stream, token, ';')) // if no coockie, loop ends
+	{
+		// Remove leading spaces (common in cookies)
+		token.erase(0, token.find_first_not_of(" \t"));
+
+		size_t pos = token.find('=');
+		if (pos != std::string::npos)
+		{
+			std::string key = token.substr(0, pos);
+			std::string value = token.substr(pos + 1);
+			if (key == "session_id")
+				return value;
+		}
+	}
+	return "";
+}
+
+//generate a string of 50 random char
+std::string generateSessionID()
+{
+	static const char alphanum[] =
+	"0123456789"
+	"!@#$%^&*"
+	"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	"abcdefghijklmnopqrstuvwxyz";
+
+	int stringLength = sizeof(alphanum) - 1;
+	std::string session_id;
+    srand(time(0));
+    for(int z=0; z < 50; z++)
+    {
+        session_id += alphanum[rand() % stringLength];
+    }
+	return session_id;
+}
+
+Response &parse_noncgi_response()
+{
+    Response *response = new Response("HTTP/1.1", 200, "OK");
+	std::ifstream src("html/loggedin.html", std::ios::binary);
+	std::string body = read_file(src);
+	// body = replaceAll(body, "{{VISIT_COUNT}}", "1");
+	// body = replaceAll(body, "{{USERNAME}}", "Joophang");
+	response->setBody(body);
+	src.close();
+	response->addHeader("Connection", "keep-alive");
+	response->addHeader("Content-Length", to_string(response->getBody().length()));
+	response->addHeader("Content-Type", find_mime("html/loggedin.html")); // Extract content type from CGI output
+	response->addHeader("Date", get_current_time());
+	response->addHeader("Server", "Webserv/1.0"); // ** TEMPORARY, wait until config file is implemented **
+	return *response;
+}
+
+Session createSession(Request &request)
+{
+	Session session;
+	std::string body = request.getBody();
+	session._visit_count = 1;
+
+	//get request has no body
+	if (body.empty())
+		return session;
+	
+	std::istringstream stream(body);
+	std::string pair;
+	while (std::getline(stream, pair, '&'))
+	{
+		size_t equal = pair.find('=');
+		if (equal != std::string::npos)
+		{
+			std::string key = pair.substr(0, equal);
+			std::string value = pair.substr(equal + 1);
+			session._data[key] = value;
+		}
+	}
+	std::cout << RED << session._data["username"] << RESET <<std::endl; 
+	return session;
+}
+
+//
+void updateSession(Session *session, Request &request)
+{
+	std::string body = request.getBody();
+	std::istringstream stream(body);
+	std::string pair;
+	printSessionData(*session);
+
+	while (std::getline(stream, pair, '&'))
+	{
+		size_t equal = pair.find('=');
+		if (equal != std::string::npos)
+		{
+			std::string key = pair.substr(0, equal);
+			std::string value = pair.substr(equal + 1);
+			session->_data[key] = value;
+		}
+	}
+	session->_visit_count += 1;
+	printSessionData(*session);
+}
+
+void printAllSessionData()
+{
+	std::cout << "==== SESSSIONSSSS ====" << std::endl;
+	std::map<std::string, Session>::iterator i;
+	for (i = sessions.begin(); i != sessions.end(); ++i)
+	{
+		std::cout << "Session id: [" << i->first << "]" << std::endl;
+		std::cout << RED << "USERNAME: " << i->second._data["username"] << RESET <<std::endl; 
+		std::cout << RED << "VISIT COUNT: " << i->second._visit_count << RESET <<std::endl; 
+	}
+}
+
+void printSessionData(Session &session)
+{
+	std::cout << RED << "USERNAME: " << session._data["username"] << RESET <<std::endl; 
+	std::cout << RED << "VISIT COUNT: " << session._visit_count << RESET <<std::endl; 
+}
+
+
