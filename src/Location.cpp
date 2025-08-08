@@ -4,8 +4,8 @@ Location::Location()
 {
 	std::cout << "Location default constructor called" << std::endl;
 	_redirect_code = 0;
-	_autoindex = 0;
-	_cgi = 0;
+	autoindex = 0;
+	cgi = 0;
 }
 
 void Location::setPath(std::string path)
@@ -31,7 +31,7 @@ void Location::setIndex(std::string index)
 
 void Location::setAutoIndex(int on)
 {
-	_autoindex = on;
+	autoindex = on;
 }
 
 void Location::setMethod(std::string method)
@@ -51,7 +51,61 @@ void Location::setRedirectUrl(std::string url)
 
 void Location::setCGI(int on)
 {
-	_cgi = on;
+	cgi = on;
+}
+
+bool Location::hasRoot () const
+{
+	return (!_root.empty());
+}
+
+bool Location::hasAlias () const
+{
+	return (!_alias.empty());
+}
+
+bool Location::hasIndex () const
+{
+	return (!_index.empty());
+}
+
+bool Location::hasRedirectUrl () const
+{
+	return (!_redirect_url.empty());
+}
+
+
+std::string Location::getRoot() const
+{
+	return _root;
+}
+std::string Location::getAlias() const
+{
+	return _alias;
+}
+std::string Location::getIndex() const
+{
+	return _index;
+}
+
+std::set<std::string> Location::getMethods() const
+{
+	return _methods;
+}
+
+std::string Location::getPath() const
+{
+	return _path;
+}
+
+std::string Location::getRedirectUrl() const
+{
+	return _redirect_url;
+}
+
+size_t Location::getRedirectCode() const
+{
+	return _redirect_code;
 }
 
 void Location::printInfo() const
@@ -61,8 +115,8 @@ void Location::printInfo() const
 	std::cout << "Root : " << _root << std::endl;
 	std::cout << "Alias : " << _alias << std::endl;
 	std::cout << "Index : " << _index << std::endl;
-	std::cout << "CGI : " << _cgi << std::endl;
-	std::cout << "AutoIndex : " << _autoindex << std::endl;
+	std::cout << "CGI : " << cgi << std::endl;
+	std::cout << "AutoIndex : " << autoindex << std::endl;
 	std::cout << "Redirect Code : " << _redirect_code << std::endl;
 	std::cout << "Redirect Url : " << _redirect_url << std::endl;
 	std::cout << "Methods : " << std::endl;

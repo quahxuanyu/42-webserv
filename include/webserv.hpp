@@ -60,4 +60,7 @@ Response &parse_cgi_response(std::string cgi_response);
 
 // AUTOINDEX.CPP
 void autoindex(Response &response, Request &request, std::string dir_path);
+
+// REDIRECTION.CPP
+void redirection(Response &response, Request &request, Location location);
 #endif

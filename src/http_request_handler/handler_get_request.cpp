@@ -76,10 +76,20 @@ Response &handle_get_request(Request &request) {
 	}
     else if (request.getUri().find("/storage") != std::string::npos)  // Check if the request is for the storage directory
     {
-        std::cout << BLUE << "Got Into Storage" << std::endl;
+        std::cout << BLUE << "Got Into Storage For AutoIndex" << RESET << std::endl;
         Response *response = new Response();
         autoindex(*response, request, "/home/quahxuanyu/42KL/42-webserv/cgi-bin/storage"); // **TEMPORARY access storage folder
 		return *response;
+    }
+    else if (request.getUri().find("/redirect") != std::string::npos)
+    {
+        std::cout << BLUE << "Got Into Redirect" << RESET << std::endl;
+        Location location;
+        location.setRedirectCode(301);
+        location.setRedirectUrl("/storage"); // **TEMPORARY redirect URL
+        Response *response = new Response();
+        redirection(*response, request, location);
+        return *response;
     }
 	else
 	{
