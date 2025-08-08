@@ -1,8 +1,35 @@
 #include "../../include/webserv.hpp"
 
-Response &handle_post_request(Request &request) {
+
+Response &handle_post_request(Server &server, Request &request)
+{
+	Response *response = new Response();
+
+	std::vector<Location> locations = server.getLocations();
+	const Location *location = matchLocation(locations, request.getUri());
+
+	if (location == NULL)
+	{	
+		handle_response_error(*response, server.getPage(404), 404);
+		return *response;
+	}
+	else if(!location->getMethods().count("POST"))
+	{	
+		handle_response_error(*response, server.getPage(405), 405);
+		return *response;
+	}
+
+	else if (atol(request.getHeader("Content-Length").c_str()) > server.getBodySizeLimit())
+	{	
+		handle_response_error(*response, server.getPage(413), 413);
+		return *response;
+	}
+
 	// Check if request is a CGI request
-	if (request.getUri().find(".cgi") != std::string::npos) {
+	else if (request.getUri().find(".cgi") != std::string::npos)
+	{
+		printf("\nDEBUGGGGGG\n");
+		delete response;
 		std::string cgi_response = cgi(request); // Execute the CGI script
 
 		// If CGI execution failed, return an error response
@@ -17,10 +44,12 @@ Response &handle_post_request(Request &request) {
 	}
 	else 
 	{
+		return parse_noncgi_response();
 		// Handle non-CGI POST requests **TEMPORARY**
-		Response *response = new Response("HTTP/1.1", 200, "OK");
-		set_headers(*response, request);
-		response->setBody("POST request received.");
-		return *response;
+		// delete response;
+		// Response *response = new Response("HTTP/1.1", 200, "OK");
+		// set_headers(*response, request);
+		// response->setBody("POST request received.");
+		// return *response;
 	}
 }

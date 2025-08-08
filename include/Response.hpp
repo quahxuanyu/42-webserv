@@ -10,17 +10,21 @@ class Response {
 		std::string _statusMessage;
 		std::map<std::string, std::string> _headers;
 		std::string _body;
+		std::string _path;
+
 	public:
 		Response();
 		Response(std::string version, int statusCode, std::string statusMessage);
 		~Response();
 
+		void setPath(const std::string path);
 		void setVersion(const std::string version);
 		void setStatusCode(int code);
 		void setStatusMessage(const std::string mesg);
 		void addHeader(const std::string key, const std::string value);
 		void setBody(const std::string body);
 
+		const std::string &getPath() const;
 		const std::string &getVersion() const;
 		int getStatusCode() const;
 		const std::string &getStatusMessage() const;

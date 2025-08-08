@@ -85,6 +85,11 @@ Location parseLocation(std::vector<std::string> tokens, size_t *i)
 			location.setRoot(tokens[*i + 1]);
 			*i += 2;
 		}
+		else if (tokens[*i] == "alias")
+		{
+			location.setAlias(tokens[*i + 1]);
+			*i += 2;
+		}
 		else if (tokens[*i] == "methods")
 		{
 			size_t j = *i;
@@ -113,6 +118,7 @@ Location parseLocation(std::vector<std::string> tokens, size_t *i)
 			(*i)++;
 	}
 	(*i)++;
+	std::cout << RED<< "debug" << RESET << std::endl;
 	return location;
 }
 
@@ -147,8 +153,9 @@ std::vector<Server> parseServer(std::vector<std::string> tokens)
 					server_1.setRoot(tokens[i + 1]);
 					i += 3;
 				}
-				else if (tokens[i] == "client_max_body_size")
+				else if (tokens[i] == "client_body_size_buf")
 				{
+					//if char convert to 0
 					server_1.setBodySize(strtol(tokens[i + 1].c_str(), NULL, 10));
 					i += 3;
 				}
@@ -175,8 +182,8 @@ std::vector<Server> parseServer(std::vector<std::string> tokens)
 bool isDirective(std::string keyword)
 {
 	if (keyword == "listen" || keyword == "server_name" || keyword == "root" || keyword == "error_page" 
-	|| keyword == "client_max_body_size" || keyword == "index" || keyword == "methods" || keyword == "return" 
-	|| keyword == "cgi" || keyword == "autoindex")
+	|| keyword == "client_body_size_buf" || keyword == "index" || keyword == "methods" || keyword == "return" 
+	|| keyword == "cgi" || keyword == "autoindex" || keyword == "alias")
 		return true;
 	else 
 		return false;
@@ -279,8 +286,31 @@ void checkTokens(std::vector<std::string> tokens)
 	checkDirectives(tokens);
 
 	checkSemicolons(tokens);
-	
+}
 
+
+void validateConfig(std::vector<Server> &servers)
+{
+	std::cout << "Validating config..." << std::endl;
+	std::set<std::string> IP_Port_Server;
+	for (size_t i = 0; i < servers.size(); i++)
+	{
+		//check error page
+		std::map<int, std::string> error_pages = servers[i].getErrorPages();
+		std::map<int, std::string>::const_iterator it;
+		for (it = error_pages.begin(); it != error_pages.end(); ++it)
+		{
+			if (!isFile(it->second))
+				throw ParseException("Error page must be a file");}
+
+		//check body size limit
+		if (servers[i].getBodySizeLimit() <= 0)
+			throw ParseException("Client body size limit must be a positive number");
+
+		std::pair<std::set<std::string>::iterator, bool> is_inserted = IP_Port_Server.insert(servers[i].getServerInfo());
+		if (!is_inserted.second)
+			throw ParseException("Duplicate server block");
+	}
 }
 
 std::vector<Server> tokenise(std::string content)
@@ -312,6 +342,7 @@ std::vector<Server> tokenise(std::string content)
 		std::vector<Server> servers = parseServer(tokens);
 		for (size_t i = 0; i < servers.size(); i++)
 			servers[i].printInfo();
+		validateConfig(servers);
 		std::cout << GREEN << "No issue!" << RESET << std::endl;
 		return (servers);
 	}
@@ -320,11 +351,13 @@ std::vector<Server> tokenise(std::string content)
 		std::cerr << RED << "Config file " << e.what() << RESET << std::endl;
 		_exit(1);
 	}
+
 	catch (ParseException &e)
 	{
 		std::cerr << RED << "Config file parsing error: " << e.what() << RESET << std::endl;
 		_exit(1);
 	}
+	
 
 }
 
@@ -349,7 +382,7 @@ std::vector<Server> parseConfigFile(char *file)
 	}
 	std::vector<Server> servers = tokenise(content); 
 	return (servers);
-	}
+}
 
 int main(int argc, char **argv)
 {
@@ -358,29 +391,24 @@ int main(int argc, char **argv)
 	// if (argc != 2)
 	// 	return (std::cout << "Incorrect number of arguments" << std::endl, 2);
 	std::vector<Server> servers = parseConfigFile(argv[1]);
+
     try 
 	{
-		// for (size_t i = 0; i < servers.size(); i++)
-        // {
-		// 	Server server = servers[i]
-		// 	();
-       	// 	server.multiplexing();}  // Run forever
-		// std::vector<std::thread> threads;
-
-		// for (size_t i = 0; i < servers.size(); ++i) 
-		// {
-		// 	// Launch a thread for each server
-		// 	threads.push_back(std::thread(servers[i].multiplexing(), &servers[i]));
-		// }
-
-		Server server("127.0.0.1", "8080");
-		server.multiplexing();
+		Connection connection(servers);
+		connection.runServers();
+		
     } 
+	catch (std::runtime_error &e)
+	{
+		std::cerr << RED << "Runtime Error: " << e.what() << RESET << std::endl;
+		_exit(1);
+	}
 	catch(const std::exception &e)
 	{
 		std::cerr << RED << "Server initialization failed: " << e.what() << RESET << std::endl;
 		return 1;
 	}
+
 }
 
 

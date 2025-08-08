@@ -9,6 +9,15 @@ Request::~Request() {}
 
 
 //Setters
+void Request::setisBad(bool is)
+{
+	_isBad = is;
+}
+
+void Request::sethasHeader(bool has) {
+	_hasHeader = has;
+}
+
 void Request::setMethod(const std::string method) {
 	_method = method;
 }
@@ -30,6 +39,15 @@ void Request::setBody(const std::string body) {
 }
 
 //GETTERS
+
+const bool &Request::isBad() const{
+	return _isBad;
+}
+
+const bool &Request::hasHeader() const {
+	return _hasHeader;
+}
+
 const std::string &Request::getMethod() const {
 	return _method;
 }
@@ -62,6 +80,7 @@ const std::string &Request::getBody() const {
 void Request::printRequest() const
 {
 	std::cout << " == REQUEST == " << std::endl;
+	std::cout << "Is Bad: "  << _isBad << std::endl;
 	std::cout << "Method : " << getMethod() << std::endl;
 	std::cout << "URI : " << getUri() << std::endl;
 	std::cout << "Version : " << getVersion() << std::endl;
