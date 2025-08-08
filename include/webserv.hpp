@@ -58,6 +58,13 @@ std::string to_string(int value); // Converts an integer to a string
 std::string get_current_time();
 std::string find_mime(std::string uri);
 void set_headers(Response &response, Request &request);
+/**
+ * @brief Modify the response to direct to an error page
+ * @param response The response object to set the error
+ * @param path The path to the error page
+ * @param error_code The HTTP error code to set in the response
+ */
+void handle_response_error(Response &response, std::string path, int error_code);
 
 //EXECUTE.CPP
 std::string execute(Request &request, char **env);
@@ -67,6 +74,11 @@ std::string cgi(Request &request);
 std::string get_content_type(const std::string &cgi_output); // Extracts the Content
 std::string get_body(const std::string &cgi_output); // Extracts the body from
 Response &parse_cgi_response(std::string cgi_response);
+/**
+ * @brief Trim trailing slash on the URI
+ * @param string The string to trim
+ */
+std::string trimTrailingSlash(const std::string &string);
 
 // AUTOINDEX.CPP
 void autoindex(Response &response, Request &request, std::string dir_path);
@@ -75,12 +87,20 @@ void autoindex(Response &response, Request &request, std::string dir_path);
 void redirection(Response &response, Request &request, Location location);
 Response &parse_noncgi_response();
 
+//READ.CPP
+/**
+ * @brief Reads the content of a file and sets it in the response body.
+ * @param response The response object to set the file content
+ * @param request The request object to get the URI
+ * @param server The server object to get the file path
+ * @param file_path The path to the file to read
+ */
+void normal_file_response(Response &response, Request &request, const Server &server, std::string file_path);
 
 bool isFile(const std::string &path);
 bool isDirectory(const std::string &path);
 bool isFileNoCwd(const std::string &path);
 const Location* matchLocation(const std::vector<Location>& locations, const std::string& uri);
-std::string read_file(std::ifstream &src);
 void handle_response_error(Response &response, std::string path, int error_code);
 std::string replaceAll(std::string str, const std::string &src, const std::string &target);
 std::string extractSessionID(std::string cookie);
@@ -91,4 +111,10 @@ void printSessionData(Session &Session);
 void printAllSessionData();
 std::string trim (std::string str);
 
+//READ.CPP
+/**
+ * @brief Reads the content of a file and returns it as a string.
+ * @param src The input file stream to read from.
+ */
+std::string read_file(std::ifstream &src);
 #endif

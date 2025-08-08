@@ -215,4 +215,30 @@ void printSessionData(Session &session)
 	std::cout << RED << "VISIT COUNT: " << session._visit_count << RESET <<std::endl; 
 }
 
+/**
+ * @brief Handles the response error response
+ * @param response The response object to set the error
+ * @param path The path to the error page
+ * @param error_code The HTTP error code to set in the response
+ */
+void handle_response_error(Response &response, std::string path, int error_code)
+{
+	response.setPath(path);
+	if (path[0] == '/')
+        path = "." + path;
+	std::ifstream src(path.c_str(), std::ios::binary);
+	response.setBody(read_file(src));
+	src.close();
+	response.setStatusCode(error_code);
+	response.setStatusMessage(httpErrorMessages[error_code]);
+	return ;
+}
 
+std::string trimTrailingSlash(const std::string &string) {
+	if (string.length() > 1 && string[string.length() - 1] == '/') {
+		return string.substr(0, string.length() - 1);
+	}
+	else {
+		return string;
+	}
+}

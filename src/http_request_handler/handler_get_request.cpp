@@ -1,128 +1,81 @@
 #include "../../include/webserv.hpp"
 
-
-
+/**
+ * @brief After matching location block, returns proper path for the request based on the location block
+ * @param server The server object containing the root directory
+ * @param location The matched location block
+ * @param uri The URI of the request
+ */
 std::string getPath(const Server &server, const Location *location, std::string uri)
 {
 	std::string file_path;
 	
 	if (location == NULL)
 		return "";
-
 	else if (location->hasRoot() || location->hasAlias() || server.hasRoot())
 	{
 		if (location->hasRoot())
 			file_path = location->getRoot() + uri;
 		else if (location->hasAlias())
 		{
-			//get substring after location path (replace location path)
-			std::string suffix = uri.substr(location->getPath().length());
-			file_path = location->getAlias() + "/" + suffix;
+			std::string suffix = uri.substr(location->getPath().length()); // get substring after location path (replace location path)
+			if (suffix.empty() || suffix[0] != '/')
+				suffix = "/" + suffix; // ensure it starts with a slash
+			file_path = location->getAlias() + suffix;
 		}
 		else if (server.hasRoot())
 			file_path = server.getRoot() + uri;
 	}
-	
-	if (isDirectory(file_path))
-	{  
-		std::cout << CYAN << "DIRECTORY URI" << RESET << std::endl;
-		if (location->hasRedirectUrl())
-		{
-			//handle redirection
-		}
-		else if (location->hasIndex())
-		{
+	if (isDirectory(file_path) && location->hasIndex())
 			file_path += location->getIndex();
-		}
-		else if (location->autoindex)
-		{
-			//handle autoindex
-		}
-		else //what to return?
-			return "";
-	}
 
 	//file_path should be a valid path now
-	if (!isFileNoCwd(file_path))
+	if (!isFileNoCwd(file_path) && !location->autoindex)
 		return "";
-	
+
 	return file_path;
 }
 
-void handle_response_error(Response &response, std::string path, int error_code)
-{
-	response.setPath(path);
-	if (path[0] == '/')
-        path = "." + path;
-	std::ifstream src(path.c_str(), std::ios::binary);
-	response.setBody(read_file(src));
-	src.close();
-	response.setStatusCode(error_code);
-	response.setStatusMessage(httpErrorMessages[error_code]);
-	return ;
-}
-
 /**
- * @brief Reads the content of a file and sets it in the response body.
+ * @brief Process a non-CGI GET request.
+ * @param server The server object containing the configuration.
+ * @param response The response object to set the response.
+ * @param request The request object containing the request details.
  */
-void process_get_request(const Server &server, Response &response, Request &request)
+void processGetRequest(const Server &server, Response &response, Request &request)
 {
 	std::string uri = request.getUri();
 	std::string file_path;
-	std::string file_content;
-
-	// ** TEMPORARY URI file path handling (need to wait for config file implementation) **
-	// if (uri == "/")
-	//     file_path = "html/upload.html";
-	// else
-	//     file_path = "." + uri; //wrong
-
 	std::vector<Location> locations = server.getLocations();
-	const Location *location = matchLocation(locations, uri);
+	const Location *location = matchLocation(locations, uri); //1. Match the location block
 
+	// 2. Check if method is allowed on location block
 	if(!location->getMethods().count("GET"))
 		return (handle_response_error(response, server.getPage(405), 405));
 	else
-	{	
+	{
+		//3. Get the file path based on the location block
 		file_path = getPath(server, location, uri);
-		response.setPath(file_path);
-		if (file_path.empty())
-			return (handle_response_error(response, server.getPage(404), 404));
+
+		// 4. Check appropriate action according to the location block
+		if (location->hasRedirectUrl()) // Redirection
+		{
+			redirection(response, request, *location);
+		}
+		else if (location->autoindex && isDirectory(file_path)) // Autoindex
+		{
+			autoindex(response, request, file_path);
+		}
+		else // Return Normal File
+		{
+			response.setPath(file_path);
+			normal_file_response(response, request, server, file_path);
+		}
 	}
-
-    // if (file_path[0] == '/')
-    // {    file_path = "." + file_path;}
-
-	std::cout << CYAN << "Path : " << file_path << RESET << std::endl;
-
-	std::ifstream src(file_path.c_str(), std::ios::binary);
-	if (!src)
-    {
-		// If the file cannot be opened, set the response status to 404
-		return (handle_response_error(response, server.getPage(404), 404));
-	}
-
-	//NO ISSUE/ERROR
-	file_content = read_file(src);
-	src.close();
-	// response.addHeader("Content-Length", to_string(file_content.length()));
-	response.setBody(file_content);
-	response.setStatusCode(200);
-	response.setStatusMessage("OK");
 }
 
 Response &handle_get_request(Server &server, Request &request)
 {
-	//**CHECKING WITH THE LOCATION BLOCKS**/
-		// 1. See if match with any location block
-		// ---- check all directives
-		// - CGI
-		// - Redirect
-		// - Else: index, 
-		// - Else: autoindex, methods, root, alias
-		// - Else routing/redirection
-		// 2. Else, return error 404
-
 	// CGI DIRECTIVE
 	if (request.getUri().find(".cgi") != std::string::npos) 
     {
@@ -139,30 +92,12 @@ Response &handle_get_request(Server &server, Request &request)
 			return parse_cgi_response(cgi_response); // Parse the CGI response and return it
 		}
 	}
-    else if (request.getUri().find("/storage") != std::string::npos)  // Check if the request is for the storage directory
-    {
-        std::cout << BLUE << "Got Into Storage For AutoIndex" << RESET << std::endl;
-        Response *response = new Response();
-        autoindex(*response, request, "/home/quahxuanyu/42KL/42-webserv/cgi-bin/storage"); // **TEMPORARY access storage folder
-		return *response;
-    }
-    else if (request.getUri().find("/redirect") != std::string::npos)
-    {
-        std::cout << BLUE << "Got Into Redirect" << RESET << std::endl;
-        Location location;
-        location.setRedirectCode(301);
-        location.setRedirectUrl("/storage"); // **TEMPORARY redirect URL
-        Response *response = new Response();
-        redirection(*response, request, location);
-        return *response;
-    }
 	else
 	{
 		// Handle non-CGI GET requests (read and return contents of the file)
 		Response *response = new Response();
 		response->setVersion(request.getVersion());
-		process_get_request(server, *response, request);
-		set_headers(*response, request);
+		processGetRequest(server, *response, request);
 		return *response;
 	}
 }

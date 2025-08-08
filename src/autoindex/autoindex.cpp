@@ -1,9 +1,6 @@
 #include "../../include/webserv.hpp"
 
 void autoindex(Response &response, Request &request, std::string dir_path) {
-    (void) response;
-    (void) request;
-
     std::vector<std::string> files;
     std::string html;
 
@@ -24,6 +21,9 @@ void autoindex(Response &response, Request &request, std::string dir_path) {
     }
     std::sort(files.begin(), files.end());
     for (size_t i = 0; i < files.size(); ++i) {
+        if (files[i] == ".") {
+            continue; // Skip current directory
+        }
         html.append("<li><a href=\"" + request.getUri() + "/" + files[i] + "\">" + files[i] + "</a></li>\n");
     }
     html.append("</ul>\n");

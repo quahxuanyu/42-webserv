@@ -28,7 +28,6 @@ void Location::setIndex(std::string index)
 	_index = index;
 }
 
-
 void Location::setAutoIndex(int on)
 {
 	autoindex = on;
@@ -52,6 +51,7 @@ void Location::setRedirectUrl(std::string url)
 void Location::setCGI(int on)
 {
 	cgi = on;
+}
 
 std::string Location::getRedirectUrl() const
 {
@@ -106,7 +106,6 @@ std::string Location::getPath() const
 {
 	return _path;
 }
-		
 
 void Location::printInfo() const
 {

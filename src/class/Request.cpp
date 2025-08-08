@@ -1,6 +1,6 @@
 #include "../../include/webserv.hpp"
 
-Request::Request() {}
+Request::Request() : _isBad(0) {}
 
 Request::Request(std::string method, std::string uri, std::string version)
 	: _method(method), _uri(uri), _version(version) {}

@@ -19,7 +19,7 @@ void Client::parse_request()
 	if (!(stream >> method >> uri >> version)) //skip space and asign to string
 		return request.setisBad(true);
 	request.setMethod(method);
-	request.setUri(uri);
+	request.setUri(trimTrailingSlash(uri));
 	request.setVersion(version);
 
 	/* PARSE HEADERS */
