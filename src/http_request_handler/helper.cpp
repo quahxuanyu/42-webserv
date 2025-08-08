@@ -65,13 +65,9 @@ std::string find_mime(std::string uri) {
 /**
  * @brief Sets the headers for the response based on the request and response status.
  */
-void set_headers(Response &response, Request &request)
+void set_headers(Response &response)
 {
-    (void)request;
-	if (response.getStatusCode() == 200)
-		response.addHeader("Connection", "keep-alive");
-	else
-		response.addHeader("Connection", "close");
+	response.addHeader("Connection", "keep-alive");
     response.addHeader("Content-Length", to_string(response.getBody().length()));
 	response.addHeader("Content-Type", find_mime(response.getPath())); //**Might not be 100% correct */
 	response.addHeader("Date", get_current_time());

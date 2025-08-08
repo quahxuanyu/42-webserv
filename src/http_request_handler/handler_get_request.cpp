@@ -54,8 +54,11 @@ void handle_response_error(Response &response, std::string path, int error_code)
 	response.setPath(path);
 	if (path[0] == '/')
         path = "." + path;
+	std::cout << CYAN << "PATH : " << path << std::endl;
 	std::ifstream src(path.c_str(), std::ios::binary);
-	response.setBody(read_file(src));
+	std::string body = read_file(src);
+	std::cout << CYAN << "CHECKING : "<< body << RESET <<  std::endl;
+	response.setBody(body);
 	src.close();
 	response.setStatusCode(error_code);
 	response.setStatusMessage(httpErrorMessages[error_code]);
@@ -145,7 +148,7 @@ Response &handle_get_request(Server &server, Request &request)
 		Response *response = new Response();
 		response->setVersion(request.getVersion());
 		process_get_request(server, *response, request);
-		set_headers(*response, request);
+		set_headers(*response);
 		return *response;
 	}
 }

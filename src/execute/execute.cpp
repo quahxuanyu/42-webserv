@@ -57,9 +57,14 @@ std::string execute(Request &request, char **env) {
 }
 
 std::string cgi(Request &request) {
+
+	std::cout << MAGENTA << request.getMethod() << RESET << std::endl;
+	std::cout << MAGENTA << request.getHeader("Content-Type") << RESET << std::endl;
+	std::cout << MAGENTA << to_string(request.getBody().length()) << RESET << std::endl;
+
 	//Make environment variables for CGI execution
 	std::string method_env = "REQUEST_METHOD=" + request.getMethod();
-	std::string content_type = "CONTENT_TYPE=" + request.getHeader("Content-Type");
+	std::string content_type = "CONTENT_TYPE= " + request.getHeader("Content-Type");
 	std::string content_length = "CONTENT_LENGTH=" + to_string(request.getBody().length());
 	char *envp[] = {
 		const_cast<char *>(method_env.c_str()),

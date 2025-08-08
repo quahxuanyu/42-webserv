@@ -2,7 +2,6 @@
 
 Response &generate_response(std::vector<Server> &servers, Request &request)
 {
-	
 	//Find matching server
 	Server server = servers[0];
 	std::cout << "request host: " << request.getHeader("Host") << std::endl;

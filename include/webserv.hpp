@@ -55,7 +55,7 @@ std::map<int, std::string> createErrorMap();
 std::string to_string(int value); // Converts an integer to a string
 std::string get_current_time();
 std::string find_mime(std::string uri);
-void set_headers(Response &response, Request &request);
+void set_headers(Response &response);
 
 //EXECUTE.CPP
 std::string execute(Request &request, char **env);

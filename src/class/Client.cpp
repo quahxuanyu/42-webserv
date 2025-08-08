@@ -5,45 +5,49 @@ std::map<std::string, Session> sessions;
 
 Client::Client() {}
 
-Client::Client(int fd) : _fd(fd) {}
+Client::Client(int fd) : _fd(fd), _start_time(0) {}
 
-void Client::parse_request()
-{
-	/* PARSE REQUEST LINE */
-	size_t line_end = recv_buf.find("\r\n"); 
-	if (line_end == std::string::npos)
-		return request.setisBad(true);
-	std::string line = recv_buf.substr(0, line_end);
-	std::stringstream stream(line);
-	std::string method, uri, version;
-	if (!(stream >> method >> uri >> version)) //skip space and asign to string
-		return request.setisBad(true);
-	request.setMethod(method);
-	request.setUri(uri);
-	request.setVersion(version);
+// void Client::parse_request()
+// {
+// 	/* PARSE REQUEST LINE */
+// 	size_t line_end = recv_buf.find("\r\n"); 
+// 	if (line_end == std::string::npos)
+// 	{	
+// 		std::cout << GREEN << "failed to get request line" << RESET << std::endl;
+// 		return request.setisBad(true);}
+// 	std::string line = recv_buf.substr(0, line_end);
+// 	std::stringstream stream(line);
+// 	std::string method, uri, version;
+// 	if (!(stream >> method >> uri >> version)) //skip space and asign to string
+// 	{	
+// 		std::cout << GREEN << "invalid request line format" << RESET << std::endl;
+// 		return request.setisBad(true);}
+// 	request.setMethod(method);
+// 	request.setUri(uri);
+// 	request.setVersion(version);
 
-	/* PARSE HEADERS */
-	std::istringstream header_stream(recv_buf.substr(line_end + 2)); // get the substr from the end of request line
-	std::string header_line;
-	while (std::getline(header_stream, header_line, '\n'))
-	{
-		size_t split_pos = header_line.find(':');
-		if (split_pos == std::string::npos)
-			continue;
-		std::string key = trim(header_line.substr(0, split_pos));
-		std::string value = trim(header_line.substr(split_pos + 1));
-		request.addHeader(key, value);
-	}
+// 	/* PARSE HEADERS */
+// 	std::istringstream header_stream(recv_buf.substr(line_end + 2)); // get the substr from the end of request line
+// 	std::string header_line;
+// 	while (std::getline(header_stream, header_line, '\n'))
+// 	{
+// 		size_t split_pos = header_line.find(':');
+// 		if (split_pos == std::string::npos)
+// 			continue;
+// 		std::string key = trim(header_line.substr(0, split_pos));
+// 		std::string value = trim(header_line.substr(split_pos + 1));
+// 		request.addHeader(key, value);
+// 	}
 
-	/* PARSE BODY */
-	size_t body_start = recv_buf.find("\r\n\r\n");
-	size_t content_length = atoi(request.getHeader("Content-Length").c_str());
-	std::string body = recv_buf.substr(body_start + 4, content_length);
-	request.setBody(body);
+// 	/* PARSE BODY */
+// 	size_t body_start = recv_buf.find("\r\n\r\n");
+// 	size_t content_length = atoi(request.getHeader("Content-Length").c_str());
+// 	std::string body = recv_buf.substr(body_start + 4, content_length);
+// 	request.setBody(body);
 
-	/* CHECK REQUEST */
-	request.printRequest();
-}
+// 	/* CHECK REQUEST */
+// 	request.printRequest();
+// }
 
 
 //check for existing session or create a new session
@@ -95,6 +99,10 @@ void Client::processRequest(std::vector<pollfd> *pfds, int pfd_i)
 	request.printRequest();
 	std::cout << "Processing request" << std::endl;
 	getSession();
+
+	//start timer for 504
+	_start_time = time(NULL);
+
 	response = generate_response(socket_to_servers[socket_fd], request);
 	addSessionData();
 
@@ -103,6 +111,7 @@ void Client::processRequest(std::vector<pollfd> *pfds, int pfd_i)
 	recv_buf.clear();
 	(*pfds)[pfd_i].events |= POLLOUT;
 	std::cout << "Processed request" << std::endl;
+	_start_time = 0; // reset the send time 0
 }
 
 /* bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
@@ -157,6 +166,27 @@ void Client::processRequest(std::vector<pollfd> *pfds, int pfd_i)
 	}
 } */
 
+
+//build a complete 408 response
+Response  handle_408_error()
+{
+	Response response;
+	std::string path = "/error_page/408.html";
+	response.setPath(path);
+	if (path[0] == '/')
+        path = "." + path;
+	std::ifstream src(path.c_str(), std::ios::binary);
+	std::string body = read_file(src);
+	response.setBody(body);
+	src.close();
+	response.setVersion("HTTP/1.1");
+	response.setStatusCode(408);
+	response.setStatusMessage(httpErrorMessages[408]);
+	set_headers(response);
+	response.addHeader("Connection", "closed");
+	return response;
+}
+
 bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
 {
 	int sender_fd = (*pfds)[pfd_i].fd;
@@ -174,12 +204,32 @@ bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
 	}
 	else
 	{
+		/* HANDLLE 408 ERROR */
+		//if its the start of a request
+		if (!_start_time)
+			_start_time = time(NULL);
+		else
+		{
+			if (time(NULL) - _start_time > 10)
+			{
+				std::cout << RED<< "Request takes too long" << RESET << std::endl;
+				response = handle_408_error();
+
+				send_buf = response.toString();
+				std::cout << "RESPONSE:\n" << send_buf << std::endl;
+				recv_buf.clear();
+				(*pfds)[pfd_i].events |= POLLOUT;
+				std::cout << "Processed request" << std::endl;
+				return false;
+			}
+		}
+
 		recv_buf.append(buf, nbytes);
 
 		if (recv_buf.find("\r\n\r\n") != std::string::npos) // header parsed
 		{
 			//generate response
-			std::cout << BLUE << "recv_data:" << recv_buf << RESET << std::endl; 
+			//std::cout << BLUE << "recv_data:" << recv_buf << RESET << std::endl; 
 			parse_request();
 			if (request.getMethod() == "POST")
 			{
@@ -209,7 +259,6 @@ bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
 bool Client::send_data(std::vector<pollfd> *pfds, int pfd_i)
 {
 	std::cout << YELLOW << "Server writing to fd " << (*pfds)[pfd_i].fd << RESET << std::endl;
-
 	
 	int bytes_sent = send(_fd, send_buf.c_str(), send_buf.length(), 0);
 	if (bytes_sent < 0)
@@ -224,11 +273,14 @@ bool Client::send_data(std::vector<pollfd> *pfds, int pfd_i)
 		std::cout << "Successfully sent data to fd " << _fd << std::endl;
 		(*pfds)[pfd_i].events &= ~POLLOUT;
 	}
+	//if connection set to closed
+	if (!_keep_alive)
+		return false;
 	return true;
 }
 
 
-/* void Client::parse_request()
+void Client::parse_request()
 {
 	// get request line
 	size_t line_end = recv_buf.find("\r\n"); 
@@ -271,4 +323,3 @@ bool Client::send_data(std::vector<pollfd> *pfds, int pfd_i)
 
 	request.printRequest();
 }
- */
