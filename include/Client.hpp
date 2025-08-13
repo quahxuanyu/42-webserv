@@ -32,7 +32,7 @@ class Client {
 		Request request;	//store HTTP request (obj)
 		Response response;
 		
-		// time_t last_activity;	//timeout handling
+		time_t _start_time;	//timeout handling
 		// bool header_parsed;		//check if header has fully received
 		// bool keep_alive;	//check if the connection should be closed
 

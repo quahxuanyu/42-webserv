@@ -164,11 +164,12 @@ void Connection::process_connections()
 			close_connection(i);
 		else if ((_pfds)[i].revents & POLLIN)
 		{	
-			std::cout << RED << "recv smtg from client" << RESET <<  std::endl;
 			handle_client_read(i);
 		}
 		else if ((_pfds)[i].revents & POLLOUT)
+		{	
 			handle_client_write(i);
+		}
 	}
 }
 

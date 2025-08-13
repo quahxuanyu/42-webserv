@@ -28,8 +28,7 @@ Response &handle_post_request(Server &server, Request &request)
 	// Check if request is a CGI request
 	else if (request.getUri().find(".cgi") != std::string::npos)
 	{
-		printf("\nDEBUGGGGGG\n");
-		delete response;
+		//delete response;
 		std::string cgi_response = cgi(request); // Execute the CGI script
 
 		// If CGI execution failed, return an error response
@@ -39,7 +38,18 @@ Response &handle_post_request(Server &server, Request &request)
 			return *error_response;
 		}
 		else {
-			return parse_cgi_response(cgi_response); // Parse the CGI response and return it
+			if (cgi_response.empty())
+			{	
+				handle_response_error(*response, server.getPage(504), 504);
+				return *response;
+			}
+			else if (cgi_response == "404")
+			{
+				handle_response_error(*response, server.getPage(404), 404);
+				return (*response);
+			}
+			else
+				return parse_cgi_response(*response, cgi_response); // Parse the CGI response and return it
 		}
 	}
 	else 
