@@ -79,6 +79,7 @@ std::map<int, std::string> createErrorMap() {
     m[403] = "Forbidden";
     m[404] = "Not Found";
     m[405] = "Method Not Allowed";
+	m[408] = "Request Timeout";
     m[411] = "Length Required";
     m[413] = "Payload Too Large";
     m[500] = "Internal Server Error";

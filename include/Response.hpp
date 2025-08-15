@@ -29,6 +29,7 @@ class Response {
 		int getStatusCode() const;
 		const std::string &getStatusMessage() const;
 		const std::map<std::string, std::string> &getHeaders() const;
+		const std::string &getHeader(std::string key) const;
 		const std::string &getBody() const;
 		std::string toString() const;
 };

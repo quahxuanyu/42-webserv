@@ -65,13 +65,9 @@ std::string find_mime(std::string uri) {
 /**
  * @brief Sets the headers for the response based on the request and response status.
  */
-void set_headers(Response &response, Request &request)
+void set_headers(Response &response)
 {
-    (void)request;
-	if (response.getStatusCode() == 200)
-		response.addHeader("Connection", "keep-alive");
-	else
-		response.addHeader("Connection", "close");
+	response.addHeader("Connection", "keep-alive");
     response.addHeader("Content-Length", to_string(response.getBody().length()));
 	response.addHeader("Content-Type", find_mime(response.getPath())); //**Might not be 100% correct */
 	response.addHeader("Date", get_current_time());
@@ -81,15 +77,19 @@ void set_headers(Response &response, Request &request)
 /***
  * @brief Reads the printed value fo the execve CGI file and returns parse into a response
  */
-Response &parse_cgi_response(std::string cgi_response) {
-	Response *response = new Response("HTTP/1.1", 200, "OK");
-	response->setBody(get_body(cgi_response)); // Extract body from CGI output
-	response->addHeader("Connection", "keep-alive");
-	response->addHeader("Content-Length", to_string(response->getBody().length()));
-	response->addHeader("Content-Type", get_content_type(cgi_response)); // Extract content type from CGI output
-	response->addHeader("Date", get_current_time());
-	response->addHeader("Server", "Webserv/1.0"); // ** TEMPORARY, wait until config file is implemented **
-	return *response;
+Response &parse_cgi_response(Response &response, std::string cgi_response) {
+	//Response *response = new Response("HTTP/1.1", 200, "OK");
+	response.setVersion("HTTP/1.1");
+	response.setStatusCode(200);
+	response.setStatusMessage("OK");
+	
+	response.setBody(get_body(cgi_response)); // Extract body from CGI output
+	response.addHeader("Connection", "keep-alive");
+	response.addHeader("Content-Length", to_string(response.getBody().length()));
+	response.addHeader("Content-Type", get_content_type(cgi_response)); // Extract content type from CGI output
+	response.addHeader("Date", get_current_time());
+	response.addHeader("Server", "Webserv/1.0"); // ** TEMPORARY, wait until config file is implemented **
+	return response;
 }
 
 std::string extractSessionID(std::string cookie)
@@ -181,7 +181,7 @@ void updateSession(Session *session, Request &request)
 	std::string body = request.getBody();
 	std::istringstream stream(body);
 	std::string pair;
-	printSessionData(*session);
+	//printSessionData(*session);
 
 	while (std::getline(stream, pair, '&'))
 	{
@@ -194,7 +194,7 @@ void updateSession(Session *session, Request &request)
 		}
 	}
 	session->_visit_count += 1;
-	printSessionData(*session);
+	//printSessionData(*session);
 }
 
 void printAllSessionData()
@@ -227,8 +227,12 @@ void handle_response_error(Response &response, std::string path, int error_code)
 	if (path[0] == '/')
         path = "." + path;
 	std::ifstream src(path.c_str(), std::ios::binary);
+	set_headers(response);
+	if (error_code == 504)
+		response.addHeader("Connection", "closed");
 	response.setBody(read_file(src));
 	src.close();
+	response.setVersion("HTTP/1.1");
 	response.setStatusCode(error_code);
 	response.setStatusMessage(httpErrorMessages[error_code]);
 	return ;

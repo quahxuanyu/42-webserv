@@ -66,38 +66,85 @@ void processGetRequest(const Server &server, Response &response, Request &reques
 		{
 			autoindex(response, request, file_path);
 		}
+		else if (file_path.find(".cgi") != std::string::npos) 
+		{
+			request.setUri(file_path); // Set the URI to the CGI script path
+			// If it is a CGI request, execute the CGI script
+			std::string cgi_response = cgi(request);
+
+			if (cgi_response.find("Error") != std::string::npos) {
+				// If CGI execution failed, return an error response
+			// 	Response *error_response = new Response("HTTP/1.1", 500, "Internal Server Error");
+			// 	error_response->setBody("CGI execution failed.");
+			// 	return *error_response;
+			}
+			else {
+				// infinite loop in CGI
+				if (cgi_response.empty())
+				{	
+					handle_response_error(response, server.getPage(504), 504);
+				}
+				//execve failed: incorrect path
+				else if (cgi_response == "500")
+				{
+					handle_response_error(response, server.getPage(500), 500);
+				}
+				else
+					parse_cgi_response(response, cgi_response); // Parse the CGI response and return it
+			}
+		}
 		else // Return Normal File
 		{
 			response.setPath(file_path);
-			normal_file_response(response, request, server, file_path);
+			normal_file_response(response, server, file_path);
 		}
 	}
 }
 
 Response &handle_get_request(Server &server, Request &request)
 {
-	// CGI DIRECTIVE
-	if (request.getUri().find(".cgi") != std::string::npos) 
-    {
-		// If it is a CGI request, execute the CGI script
-		std::string cgi_response = cgi(request);
+	Response *response = new Response();
 
-		if (cgi_response.find("Error") != std::string::npos) {
-			// If CGI execution failed, return an error response
-			Response *error_response = new Response("HTTP/1.1", 500, "Internal Server Error");
-			error_response->setBody("CGI execution failed.");
-			return *error_response;
-		}
-		else {
-			return parse_cgi_response(cgi_response); // Parse the CGI response and return it
-		}
-	}
-	else
-	{
-		// Handle non-CGI GET requests (read and return contents of the file)
-		Response *response = new Response();
-		response->setVersion(request.getVersion());
-		processGetRequest(server, *response, request);
-		return *response;
-	}
+	response->setVersion(request.getVersion());
+	processGetRequest(server, *response, request);
+	return *response;
 }
+
+
+
+
+
+	// CGI DIRECTIVE
+	//std::cout << request.getUri() << std::endl;
+	// if (request.getUri().find(".cgi") != std::string::npos) 
+    // {
+	// 	// If it is a CGI request, execute the CGI script
+	// 	std::string cgi_response = cgi(request);
+
+	// 	if (cgi_response.find("Error") != std::string::npos) {
+	// 		// If CGI execution failed, return an error response
+	// 		Response *error_response = new Response("HTTP/1.1", 500, "Internal Server Error");
+	// 		error_response->setBody("CGI execution failed.");
+	// 		return *error_response;
+	// 	}
+	// 	else {
+	// 		// infinite loop in CGI
+	// 		if (cgi_response.empty())
+	// 		{	
+	// 			handle_response_error(*response, server.getPage(504), 504);
+	// 			return *response;
+	// 		}
+	// 		//execve failed: incorrect path
+	// 		else if (cgi_response == "404")
+	// 		{
+	// 			handle_response_error(*response, server.getPage(404), 404);
+	// 			return (*response);
+	// 		}
+	// 		/// when ?
+	// 		else
+	// 			return parse_cgi_response(*response, cgi_response); // Parse the CGI response and return it
+	// 	}
+	// }
+	// else
+	// {
+		// Handle non-CGI GET requests (read and return contents of the file)

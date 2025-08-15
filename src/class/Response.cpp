@@ -54,6 +54,16 @@ const std::map<std::string, std::string> &Response::getHeaders() const
 	return _headers;
 }
 
+const std::string &Response::getHeader(std::string key) const {
+	std::map<std::string, std::string>::const_iterator it = _headers.find(key);
+	if (it != _headers.end()) {
+		return it->second;
+	}
+	static const std::string empty_string; // Return an empty string if the header is not found
+	return empty_string;
+}
+
+
 const std::string &Response::getBody() const {
 	return _body;
 }

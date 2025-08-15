@@ -57,7 +57,7 @@ std::map<int, std::string> createErrorMap();
 std::string to_string(int value); // Converts an integer to a string
 std::string get_current_time();
 std::string find_mime(std::string uri);
-void set_headers(Response &response, Request &request);
+void set_headers(Response &response);
 /**
  * @brief Modify the response to direct to an error page
  * @param response The response object to set the error
@@ -73,7 +73,7 @@ std::string cgi(Request &request);
 // CGI_HELPER.CPP
 std::string get_content_type(const std::string &cgi_output); // Extracts the Content
 std::string get_body(const std::string &cgi_output); // Extracts the body from
-Response &parse_cgi_response(std::string cgi_response);
+Response &parse_cgi_response(Response &response, std::string cgi_response);
 /**
  * @brief Trim trailing slash on the URI
  * @param string The string to trim
@@ -95,7 +95,7 @@ Response &parse_noncgi_response();
  * @param server The server object to get the file path
  * @param file_path The path to the file to read
  */
-void normal_file_response(Response &response, Request &request, const Server &server, std::string file_path);
+void normal_file_response(Response &response, const Server &server, std::string file_path);
 
 bool isFile(const std::string &path);
 bool isDirectory(const std::string &path);

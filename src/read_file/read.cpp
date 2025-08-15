@@ -1,6 +1,6 @@
 #include "../../include/webserv.hpp"
 
-void normal_file_response(Response &response, Request &request, const Server &server, std::string file_path) {
+void normal_file_response(Response &response, const Server &server, std::string file_path) {
 	std::string file_content;
 	//READING FILE CONTENT
 	std::ifstream src(file_path.c_str(), std::ios::binary);
@@ -17,5 +17,5 @@ void normal_file_response(Response &response, Request &request, const Server &se
 	response.setBody(file_content);
 	response.setStatusCode(200);
 	response.setStatusMessage("OK");
-	set_headers(response, request);
+	set_headers(response);
 }

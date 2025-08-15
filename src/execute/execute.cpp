@@ -11,6 +11,7 @@ std::string execute(Request &request, char **env) {
 	}
 
 	std::string cgi_path = request.getUri();
+	std::cout << CYAN << "cgi path :" << cgi_path << RESET << std::endl;
 	char *argv[] = {const_cast<char*>(cgi_path.c_str()), NULL};
 
 	pid_t pid = fork();
@@ -18,7 +19,8 @@ std::string execute(Request &request, char **env) {
 		perror("fork failed");
 		return "";
 	}
-	if (pid == 0) {
+	if (pid == 0)
+	{
 		// Child process
 		dup2(stdin_pipe[0], STDIN_FILENO);   // Read from parent
 		dup2(stdout_pipe[1], STDOUT_FILENO); // Write to parent
@@ -32,7 +34,9 @@ std::string execute(Request &request, char **env) {
 			perror("execve failed");
 			exit(1);
 		}
-	} else {
+	}
+	else
+	{
 		// Parent process
 		close(stdin_pipe[0]);  // Close unused read end
 		close(stdout_pipe[1]); // Close unused write end
@@ -40,6 +44,24 @@ std::string execute(Request &request, char **env) {
 		// Write request body to CGI's stdin
 		write(stdin_pipe[1], request.getBody().c_str(), request.getBody().length());
 		close(stdin_pipe[1]); // EOF to child
+		time_t start = time(NULL);
+		int status;
+		while (1)
+		{
+			int res = waitpid(pid, &status, WNOHANG);
+			if (res == pid)
+				break;
+			if (time(NULL) - start >= 10)
+			{
+				std::cout << "CGI too long" << std::endl;
+				kill(pid, SIGKILL);
+				waitpid(pid, NULL, 0);
+				return "";
+			}
+		}
+		//if execve failed, exit (1)
+		if (WIFEXITED(status) && WEXITSTATUS(status))
+			return "500";
 
 		// Read CGI output from child's stdout
 		char buffer[1024];
@@ -49,9 +71,6 @@ std::string execute(Request &request, char **env) {
 			cgi_output += buffer;
 		}
 		close(stdout_pipe[0]);
-
-		// Wait for CGI to finish
-		waitpid(pid, NULL, 0);
 	}
 	return cgi_output;
 }
