@@ -61,7 +61,7 @@ std::string execute(Request &request, char **env) {
 		}
 		//if execve failed, exit (1)
 		if (WIFEXITED(status) && WEXITSTATUS(status))
-			return "404";
+			return "500";
 
 		// Read CGI output from child's stdout
 		char buffer[1024];

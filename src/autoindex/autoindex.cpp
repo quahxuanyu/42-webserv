@@ -29,9 +29,9 @@ void autoindex(Response &response, Request &request, std::string dir_path) {
     html.append("</ul>\n");
     html.append("</body>\n");
     html.append("</html>\n");
-    std::cout << html << std::endl;
-    response.setVersion(request.getVersion());
+    // std::cout << html << std::endl; ?????? WHY NO SET BODY PUT COUT CAN STILL WORK????
     response.setBody(html);
+    response.setVersion(request.getVersion());
     response.setStatusCode(200);
     response.setStatusMessage("OK");
     response.addHeader("Connection", "keep-alive");
