@@ -202,10 +202,11 @@ bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
 			_start_time = time(0);
 		else
 		{
+			// time_t cur_time = time(NULL);
 			// std::cout << RED << "Checking time" << RESET << std::endl;
 			// std::cout << RED << _start_time << RESET << std::endl;
-			// std::cout << RED << time(0) << RESET << std::endl;
-			if (time(NULL) - _start_time >= 3)
+			// std::cout << RED << cur_time << RESET << std::endl;
+			if (time(NULL) - _start_time >=5)
 			{
 				(*pfds)[pfd_i].events &= ~ POLLIN;
 

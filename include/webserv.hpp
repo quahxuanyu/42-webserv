@@ -50,6 +50,8 @@ extern std::map<std::string, Session> sessions;
 std::map<int, std::string> createErrorMap();
 
 
+std::vector<Server> parseConfigFile(char *file);
+
 
 
 
