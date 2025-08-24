@@ -47,9 +47,8 @@ Response &handle_post_request(Server &server, Request &request)
 
 		// If CGI execution failed, return an error response
 		if (cgi_response.find("Error") != std::string::npos) {
-			Response *error_response = new Response("HTTP/1.1", 500, "Internal Server Error");
-			error_response->setBody("CGI execution failed.");
-			return *error_response;
+			handle_response_error(*response, server.getPage(500), 500);
+			return *response;
 		}
 		else {
 			if (cgi_response.empty())

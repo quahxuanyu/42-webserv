@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>File List</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    ul { list-style-type: none; padding: 0; }
+    li { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      padding: 5px; 
+      border-bottom: 1px solid #ddd; 
+    }
+    button { 
+      padding: 4px 8px; 
+      background-color: #d9534f; 
+      color: white; 
+      border: none; 
+      border-radius: 4px; 
+      cursor: pointer; 
+    }
+    button:hover {
+      background-color: #c9302c;
+    }
+  </style>
+</head>
+<body>
+  <h1>Available Files</h1>
+  <ul id="file-list"></ul>
+
+  <script>
+    // Fetch file list
+    fetch("/cgi-bin/get_files.cgi")
+      .then(response => response.json())
+      .then(files => {
+        const list = document.getElementById("file-list");
+        files.forEach(file => {
+          const li = document.createElement("li");
+
+          // filename text
+          const span = document.createElement("span");
+          span.textContent = file;
+          li.appendChild(span);
+
+          // delete button
+          const btn = document.createElement("button");
+          btn.textContent = "Delete";
+          btn.onclick = () => {
+            fetch(`/cgi-bin/storage/${encodeURIComponent(file)}`, {
+              method: "DELETE"
+            })
+            .then(res => {
+              if (res.ok) {
+                li.remove(); // remove from UI if deleted successfully
+              } else {
+                console.error("Failed to delete:", file);
+              }
+            })
+            .catch(err => console.error("Error:", err));
+          };
+          li.appendChild(btn);
+
+          list.appendChild(li);
+        });
+      })
+      .catch(err => {
+        console.error("Error fetching file list:", err);
+      });
+  </script>
+</body>
+</html>

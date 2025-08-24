@@ -25,6 +25,10 @@ Response &generate_response(std::vector<Server> &servers, Request &request)
 	else if (request.getMethod() == "POST") {
 		return handle_post_request(server, request);
 	}
+	else if (request.getMethod() == "DELETE")
+	{
+		return handle_delete_request(server, request);
+	}
 	else
 	{
 		// If the method is not suppsten 127.0.0.1:4243;orted, return a 501 Not Implemented response

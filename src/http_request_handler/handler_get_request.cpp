@@ -68,15 +68,26 @@ void processGetRequest(const Server &server, Response &response, Request &reques
 		}
 		else if (file_path.find(".cgi") != std::string::npos) 
 		{
-			request.setUri(file_path); // Set the URI to the CGI script path
+			if (location->hasRoot() || location->hasAlias() || server.hasRoot())
+			{
+				if (location->hasRoot())
+					request.setUri(location->getRoot() + request.getUri());
+				else if (location->hasAlias())
+				{
+					std::string suffix = request.getUri().substr(location->getPath().length()); // get substring after location path (replace location path)
+					if (suffix.empty() || suffix[0] != '/')
+						suffix = "/" + suffix; // ensure it starts with a slash
+					request.setUri(location->getAlias() + suffix);
+				}
+				else if (server.hasRoot())
+					request.setUri(server.getRoot() + request.getUri());
+			}
+			// request.setUri(file_path); // Set the URI to the CGI script path
 			// If it is a CGI request, execute the CGI script
 			std::string cgi_response = cgi(request);
 
 			if (cgi_response.find("Error") != std::string::npos) {
-				// If CGI execution failed, return an error response
-			// 	Response *error_response = new Response("HTTP/1.1", 500, "Internal Server Error");
-			// 	error_response->setBody("CGI execution failed.");
-			// 	return *error_response;
+				handle_response_error(response, server.getPage(500), 500);
 			}
 			else {
 				// infinite loop in CGI
