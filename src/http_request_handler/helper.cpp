@@ -78,7 +78,6 @@ void set_headers(Response &response)
  * @brief Reads the printed value fo the execve CGI file and returns parse into a response
  */
 Response &parse_cgi_response(Response &response, std::string cgi_response) {
-	//Response *response = new Response("HTTP/1.1", 200, "OK");
 	response.setVersion("HTTP/1.1");
 	response.setStatusCode(200);
 	response.setStatusMessage("OK");

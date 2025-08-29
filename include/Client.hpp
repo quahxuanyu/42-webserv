@@ -30,7 +30,7 @@ class Client {
 		std::string recv_buf;	//store incoming request data
 		std::string send_buf;	//store outgoing response
 		Request request;	//store HTTP request (obj)
-		Response response;
+		Response *response;
 		
 		time_t _start_time;	//timeout handling
 		// bool header_parsed;		//check if header has fully received

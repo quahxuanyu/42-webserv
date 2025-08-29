@@ -76,17 +76,17 @@ void Client::getSession()
 void Client::addSessionData()
 {
 	//add cookie to response
-	response.addHeader("Set-Cookie", "session_id=" + _session_id);
+	response->addHeader("Set-Cookie", "session_id=" + _session_id);
 
 	//update visit count
-	std::string body = response.getBody();
+	std::string body = response->getBody();
 	body = replaceAll(body, "{{VISIT_COUNT}}", to_string(_session->_visit_count));
 	body = replaceAll(body, "{{USERNAME}}", _session->_data["username"]);
 
-	response.setBody(body);
+	response->setBody(body);
 
 	//update content length
-	response.addHeader("Content-Length", to_string(response.getBody().length()));
+	response->addHeader("Content-Length", to_string(response->getBody().length()));
 
 }
 
@@ -94,10 +94,11 @@ void Client::processRequest(std::vector<pollfd> *pfds, int pfd_i)
 {
 	//request.printRequest();
 	getSession();
-	response = generate_response(socket_to_servers[socket_fd], request);
+	response = &generate_response(socket_to_servers[socket_fd], request);
 	addSessionData();
 
-	send_buf = response.toString();
+	send_buf = response->toString();
+	delete response;
 	std::cout << "== RESPONSE: ==\n" << send_buf << std::endl;
 	recv_buf.clear();
 	(*pfds)[pfd_i].events |= POLLOUT;
@@ -156,22 +157,22 @@ void Client::processRequest(std::vector<pollfd> *pfds, int pfd_i)
 	}
 } */
 
-Response  handle_408_error()
+Response *handle_408_error()
 {
-	Response response;
+	Response *response = new Response();
 	std::string path = "/error_page/408.html";
-	response.setPath(path);
+	response->setPath(path);
 	if (path[0] == '/')
         path = "." + path;
 	std::ifstream src(path.c_str(), std::ios::binary);
 	std::string body = read_file(src);
-	response.setBody(body);
+	response->setBody(body);
 	src.close();
-	response.setVersion("HTTP/1.1");
-	response.setStatusCode(408);
-	response.setStatusMessage(httpErrorMessages[408]);
-	set_headers(response);
-	response.addHeader("Connection", "closed");
+	response->setVersion("HTTP/1.1");
+	response->setStatusCode(408);
+	response->setStatusMessage(httpErrorMessages[408]);
+	set_headers(*response);
+	response->addHeader("Connection", "closed");
 	return response;
 }
 
@@ -213,7 +214,8 @@ bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
 				std::cout << RED << "Request takes too long" << RESET << std::endl;
 				response = handle_408_error();
 
-				send_buf = response.toString();
+				send_buf = response->toString();
+				delete response;
 				std::cout << "== RESPONSE: ==\n" << send_buf << std::endl;
 				recv_buf.clear();
 				(*pfds)[pfd_i].events |= POLLOUT;
@@ -274,7 +276,7 @@ bool Client::send_data(std::vector<pollfd> *pfds, int pfd_i)
 	}
 
 	//if connection set to closed
-	if ((response.getHeader("Connection")) == "closed")
+	if ((response->getHeader("Connection")) == "closed")
 		return false;
 	return true;
 }
