@@ -50,6 +50,8 @@ extern std::map<std::string, Session> sessions;
 std::map<int, std::string> createErrorMap();
 
 
+std::vector<Server> parseConfigFile(char *file);
+
 
 
 
@@ -110,6 +112,7 @@ void updateSession(Session *session, Request &request);
 void printSessionData(Session &Session);
 void printAllSessionData();
 std::string trim (std::string str);
+std::string defaultErrorPage(int error_code);
 
 //READ.CPP
 /**

@@ -223,18 +223,25 @@ void printSessionData(Session &session)
  */
 void handle_response_error(Response &response, std::string path, int error_code)
 {
-	response.setPath(path);
-	if (path[0] == '/')
-        path = "." + path;
-	std::ifstream src(path.c_str(), std::ios::binary);
 	set_headers(response);
 	if (error_code == 504)
 		response.addHeader("Connection", "closed");
-	response.setBody(read_file(src));
-	src.close();
 	response.setVersion("HTTP/1.1");
 	response.setStatusCode(error_code);
 	response.setStatusMessage(httpErrorMessages[error_code]);
+	response.addHeader("Content-Type", "text/html");
+
+	if (!path.empty())
+	{
+		response.setPath(path);
+		if (path[0] == '/')
+			path = "." + path;
+		std::ifstream src(path.c_str(), std::ios::binary);
+		response.setBody(read_file(src));
+		src.close();
+	}
+	else
+		response.setBody(defaultErrorPage(error_code));
 	return ;
 }
 
@@ -245,4 +252,18 @@ std::string trimTrailingSlash(const std::string &string) {
 	else {
 		return string;
 	}
+}
+
+std::string defaultErrorPage(int error_code)
+{
+	std::string html;
+	html = "<!DOCTYPE html>\n<html>\n";
+	html.append("<head>\n<title>Default Error Page</title>\n</head>\n");
+	html.append("<body>\n");
+	html.append("<h1>" + to_string(error_code) + "</h1>\n");
+	html.append("<p>" + httpErrorMessages[error_code] + "</p>\n");
+	html.append("</body>\n");
+    html.append("</html>\n");
+
+	return html;
 }
