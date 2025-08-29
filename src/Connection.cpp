@@ -4,7 +4,7 @@ std::map<int, std::vector<Server> > socket_to_servers;
 
 Connection::Connection(std::vector<Server> servers) : _fd_count(0), _servers(servers) {}
 
-//group servers with the same IP port 
+//group servers with the same IP port , ip and port combo is the unique key
 void Connection::group_servers()
 {
 	for (std::vector<Server>::iterator itr = _servers.begin(); itr != _servers.end(); ++itr)
