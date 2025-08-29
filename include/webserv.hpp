@@ -34,6 +34,7 @@
 //HTTP_REQUEST_HANDLER
 Response &handle_get_request(Server &server, Request &request); // Handles GET requests and returns a Response object
 Response &handle_post_request(Server &server, Request &request); // Handles POST requests and returns a Response object
+Response &handle_delete_request(Server &server, Request &request); // Handles DELETE requests and returns a Response object
 Response &generate_response(std::vector<Server> &servers, Request &request);	 // Processes the request and returns a Response object
 #define BLACK     "\033[0;30m"
 #define RED       "\033[0;31m"

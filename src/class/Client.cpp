@@ -227,7 +227,7 @@ bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
 		if (recv_buf.find("\r\n\r\n") != std::string::npos) // header parsed
 		{
 			//generate response
-			std::cout << BLUE << "recv_data:" << recv_buf << RESET << std::endl; 
+			// std::cout << BLUE << "recv_data:" << recv_buf << RESET << std::endl; 
 			parse_request();
 			if (request.getMethod() == "POST")
 			{
