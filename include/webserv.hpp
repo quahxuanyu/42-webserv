@@ -68,6 +68,11 @@ void set_headers(Response &response);
  * @param error_code The HTTP error code to set in the response
  */
 void handle_response_error(Response &response, std::string path, int error_code);
+/**
+ * @brief Decodes a URL-encoded string.
+ * Changes %XX to the corresponding character and + to space.
+ */
+std::string urlDecode(const std::string &src);
 
 //EXECUTE.CPP
 std::string execute(Request &request, char **env);
