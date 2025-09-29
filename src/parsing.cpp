@@ -304,6 +304,7 @@ std::vector<Server> tokenise(std::string content)
 
 std::vector<Server> parseConfigFile(char *file)
 {
+	std::cout << file << std::endl;
 	std::string content;
 	std::string line;
 	std::ifstream ConfigFile(file);

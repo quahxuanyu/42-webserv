@@ -173,6 +173,12 @@ void Connection::process_connections()
 	}
 }
 
+void	ft_signal(int signum)
+{
+	(void)signum;
+	_exit(1);
+}
+
 void Connection::runServers()
 {
 	//_socket_to_servers ready
@@ -190,6 +196,7 @@ void Connection::runServers()
 		_pfds.push_back(listener);	//add to pfds for poll
 		listening_fds.insert(listener.fd);	//add to listening socket set
 
+		//iterate through all the servers
 		for (size_t i = 0; i < it->second.size(); i++)
 		{	
 			std::cout << CYAN << "listener fd: " << listener.fd << ", servers: " << RESET <<std::endl;
@@ -201,6 +208,7 @@ void Connection::runServers()
 	std::cout << "Server: waiting for connections.." << std::endl;
 	while (1)
 	{
+		signal(SIGINT, ft_signal);
 		int poll_count = poll(_pfds.data(), _fd_count, -1);
 		if (poll_count == -1)
 			throw std::runtime_error("poll failed");

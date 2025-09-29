@@ -41,9 +41,9 @@ class Client {
 		Session *_session;
 
 	public:
+		int socket_fd;		//server that client connects to 
 		void addSessionData();
 		void processRequest(std::vector<pollfd> *pfds, int pfd_i);
-		int socket_fd;		//server that client connects to 
 		bool recv_data(std::vector<pollfd> *pfds, int pfd_i);
 		bool send_data(std::vector<pollfd> *pfds, int pfd_i);
 		void parse_request();

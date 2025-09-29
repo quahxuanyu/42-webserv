@@ -36,15 +36,15 @@ bool isDirectory(const std::string &path)
 	return false;
 }
 
-//find the longest matching location block path
-const Location* matchLocation(const std::vector<Location>& locations, const std::string& uri)
+//find the longest matching location block path, return NULL if not match with any
+const Location* matchLocation(const std::vector<Location> &locations, const std::string& uri)
 {
 	const Location* best_match = NULL;
 	size_t best_len = 0;
 
 	for (size_t i = 0; i < locations.size(); i++)
 	{
-		const std::string& path = locations[i].getPath();
+		const std::string &path = locations[i].getPath();
 		//handle file/dir URI
 		if (uri.find(path) == 0)
 		{ // starts with path

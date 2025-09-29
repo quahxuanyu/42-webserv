@@ -2,7 +2,7 @@
 
 Response &generate_response(std::vector<Server> &servers, Request &request)
 {
-	//Find matching server
+	//Find matching server - use the first server by default
 	Server server = servers[0];
 	request.setUri(urlDecode(request.getUri()));
 	if (servers.size() > 1)
@@ -31,9 +31,10 @@ Response &generate_response(std::vector<Server> &servers, Request &request)
 	}
 	else
 	{
-		// If the method is not suppsten 127.0.0.1:4243;orted, return a 501 Not Implemented response
-		Response *response = new Response();
-		handle_response_error(*response, server.getPage(501), 501);
+		// If the method is not suppsten 127.0.0.1:4243, return a 501 Not Implemented response
+		Response *response = new Response("HTTP/1.1", 501, "Not Implemented");
+		response->addHeader("Content-Type", "text/plain");
+		response->setBody("Method Not Implemented");
 		return *response;
 	}
 }

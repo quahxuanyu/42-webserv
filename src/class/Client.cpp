@@ -203,11 +203,7 @@ bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
 			_start_time = time(0);
 		else
 		{
-			// time_t cur_time = time(NULL);
-			// std::cout << RED << "Checking time" << RESET << std::endl;
-			// std::cout << RED << _start_time << RESET << std::endl;
-			// std::cout << RED << cur_time << RESET << std::endl;
-			if (time(NULL) - _start_time >=5)
+			if (time(NULL) - _start_time >= 10)
 			{
 				(*pfds)[pfd_i].events &= ~ POLLIN;
 
@@ -228,7 +224,6 @@ bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
 
 		if (recv_buf.find("\r\n\r\n") != std::string::npos) // header parsed
 		{
-			//generate response
 			// std::cout << BLUE << "recv_data:" << recv_buf << RESET << std::endl; 
 			parse_request();
 			if (request.getMethod() == "POST")
@@ -243,14 +238,10 @@ bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
 					std::cout << GREEN << "Finished Receiving Data!" << RESET << std::endl;
 					processRequest(pfds, pfd_i);
 				}
-				// std::cout << GREEN << "body length" <<body.length() << std::endl;
-				// std::cout << RED << "debug1 " << RESET << std::endl;
 			}
 			//finish reading get request
 			else
-			{
 				processRequest(pfds, pfd_i);
-			}
 		}
 		return true;
 	}
@@ -260,7 +251,6 @@ bool Client::send_data(std::vector<pollfd> *pfds, int pfd_i)
 {
 	std::cout << YELLOW << "Server writing to fd " << (*pfds)[pfd_i].fd << RESET << std::endl;
 
-	
 	int bytes_sent = send(_fd, send_buf.c_str(), send_buf.length(), 0);
 	if (bytes_sent < 0)
 	{
@@ -281,25 +271,27 @@ bool Client::send_data(std::vector<pollfd> *pfds, int pfd_i)
 	return true;
 }
 
-
 void Client::parse_request()
 {
 	/* PARSE REQUEST LINE */
 	size_t line_end = recv_buf.find("\r\n"); 
+
 	if (line_end == std::string::npos)
 		return request.setisBad(true);
+
 	std::string line = recv_buf.substr(0, line_end);
 	std::stringstream stream(line);
 	std::string method, uri, version;
 	if (!(stream >> method >> uri >> version)) //skip space and asign to string
 		return request.setisBad(true);
+
 	request.setMethod(method);
 	request.setUri(trimTrailingSlash(uri));
 	request.setVersion(version);
 
 	size_t line_start = line_end + 2;
 
-	//store headers - split by '\r\n' - then ':'
+	//store headers, split by '\r\n', then ':'
 	while (1)
 	{
 		line_end = recv_buf.find("\r\n", line_start);
@@ -323,5 +315,5 @@ void Client::parse_request()
 	std::string body = recv_buf.substr(body_start + 4, content_length);
 	request.setBody(body);
 
-	//request.printRequest();
+	request.printRequest();
 }
