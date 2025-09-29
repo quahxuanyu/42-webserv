@@ -266,3 +266,26 @@ std::string defaultErrorPage(int error_code)
 
 	return html;
 }
+
+/**
+ * @brief Decodes a URL-encoded string.
+ * Changes %XX to the corresponding character and + to space.
+ */
+std::string urlDecode(const std::string &src) {
+    std::string ret;
+    char ch;
+    int i, ii;
+    for (i = 0; i < (int)src.length(); i++) {
+        if (src[i] == '%') {
+            sscanf(src.substr(i + 1, 2).c_str(), "%x", &ii);
+            ch = static_cast<char>(ii);
+            ret += ch;
+            i += 2;
+        } else if (src[i] == '+') {
+            ret += ' '; // convert + to space
+        } else {
+            ret += src[i];
+        }
+    }
+    return ret;
+}

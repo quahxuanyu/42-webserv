@@ -1,24 +1,5 @@
 #include "../../include/webserv.hpp"
 
-std::string urlDecode(const std::string &src) {
-    std::string ret;
-    char ch;
-    int i, ii;
-    for (i = 0; i < (int)src.length(); i++) {
-        if (src[i] == '%') {
-            sscanf(src.substr(i + 1, 2).c_str(), "%x", &ii);
-            ch = static_cast<char>(ii);
-            ret += ch;
-            i += 2;
-        } else if (src[i] == '+') {
-            ret += ' '; // convert + to space
-        } else {
-            ret += src[i];
-        }
-    }
-    return ret;
-}
-
 bool delete_file(std::string path)
 {
     if (std::remove(path.c_str()) != 0) {
@@ -67,7 +48,6 @@ Response &handle_delete_request(Server &server, Request &request)
             request.setUri(server.getRoot() + request.getUri());
     }
 
-    path = urlDecode(request.getUri());
     if (delete_file(path) == true)
     {
         std::cout << GREEN << "DELETE Success: " << path << RESET << std::endl;

@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>42 Webserv Terminal</title>
+  <style>
+    :root{
+      --bg:#0f1724;
+      --card:#0b1220;
+      --accent:#7f5cff;
+      --muted:#94a3b8;
+      --glass: rgba(255,255,255,0.03);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
+      background: linear-gradient(180deg,var(--bg) 0%, #071028 100%);
+      color:#e6eef8;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:32px;
+    }
+
+    .container{
+      width:100%;
+      max-width:1280px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:14px;
+      padding:28px;
+      box-shadow: 0 6px 30px rgba(2,6,23,0.6);
+      border:1px solid rgba(255,255,255,0.03);
+    }
+
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:18px;
+    }
+
+    h1{font-size:1.25rem;margin:0}
+    p.lead{margin:0;color:var(--muted);font-size:0.95rem}
+
+    /* Grid */
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap:16px;
+      margin-top:18px;
+    }
+
+    a.card{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      padding:18px;
+      text-decoration:none;
+      border-radius:12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.006));
+      border:1px solid rgba(255,255,255,0.03);
+      transition:transform .14s ease, box-shadow .14s ease, background .14s ease;
+      color:inherit;
+      min-height:84px;
+    }
+
+    a.card:hover{transform:translateY(-6px);box-shadow: 0 10px 30px rgba(2,6,23,0.6);}
+
+    .icon{
+      width:56px;height:56px;display:grid;place-items:center;border-radius:10px;background:var(--glass);flex:0 0 56px;
+    }
+    .title{font-weight:600}
+    .desc{font-size:0.9rem;color:var(--muted)}
+
+    /* small screens */
+    @media (max-width:420px){
+      .container{padding:18px}
+      .icon{width:48px;height:48px;flex:0 0 48px}
+    }
+    .main-title {
+    font-size: 2rem;       /* Bigger than normal h1 */
+    font-weight: 700;      /* Bold */
+    text-align: center;    /* Centered */
+    margin-bottom: 1rem;   /* Space below */
+    color: #ffffff;        /* Bright text */
+    text-shadow: 0 0 10px rgba(127, 92, 255, 0.7); /* Subtle glow */
+    }
+    h2{margin-top:32px;font-size:1.1rem;color:#e2e8f0}
+    .tags {
+    margin-top: 6px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    }
+
+    .tag {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 6px;
+    color: white;
+    }
+
+    .tag.get    { background: #3b82f6; } /* Blue */
+    .tag.post   { background: #22c55e; } /* Green */
+    .tag.delete { background: #ef4444; } /* Red */
+    .tag.cgi    { background: #f59e0b; } /* Amber/Yellow */
+
+  </style>
+</head>
+<body>
+  <main class="container" role="main">
+    <h1 class="main-title">42 Webserv - Main Terminal</h1>
+    <br>
+    <br>
+    <header>
+      <div>
+        <h1>Quick Actions</h1>
+        <p class="lead">Click a button to go to its URL</p>
+      </div>
+      <div aria-hidden="true">&nbsp;</div>
+    </header>
+
+    <section class="grid" aria-label="Action buttons">
+
+      <!-- Delete file button -->
+      <a class="card" href="/list" role="link" aria-label="Delete file">
+        <div class="icon" aria-hidden="true">
+          <!-- Trash SVG -->
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M3 6h18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M10 11v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M14 11v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+            <div>
+            <div class="title">View / Delete file</div>
+            <div class="desc">List the files uploaded. Permanently remove a file.</div>
+            </div>
+            <div class="tags">
+                <span class="tag get">GET</span>
+                <span class="tag delete">DELETE</span>
+                <span class="tag cgi">CGI</span>
+            </div>
+        </div>
+      </a>
+
+      <!-- Auto Index button -->
+      <a class="card" href="/autoindex" role="link" aria-label="Auto Index">
+        <div class="icon" aria-hidden="true">
+          <!-- Index / Folder SVG -->
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 7h5l2 3h11v9a1 1 0 0 1-1 1H3V7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+            <path d="M8 3h8l2 3H6l2-3z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+            <div>
+            <div class="title">Auto Index</div>
+            <div class="desc">Generate or view an index listing for a folder.</div>
+            </div>
+            <div class="tags">
+                <span class="tag get">GET</span> 
+            </div>
+        </div>
+      </a>
+
+      <!-- Upload File button -->
+      <a class="card" href="/upload" role="link" aria-label="Upload File">
+        <div class="icon" aria-hidden="true">
+          <!-- Upload SVG -->
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+            <path d="M17 8l-5-5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+            <path d="M12 3v13" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+            <div>
+            <div class="title">Upload File</div>
+            <div class="desc">Send a file to the server.</div>
+            </div>
+            <div class="tags">
+                <span class="tag post">POST</span>
+                <span class="tag cgi">CGI</span>
+            </div>
+        </div>
+      </a>
+
+      <!-- Redirect button -->
+      <a class="card" href="/redirect" role="link" aria-label="Redirect">
+        <div class="icon" aria-hidden="true">
+          <!-- Redirect / Arrow SVG -->
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 12h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M14 6l6 6-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+            <div>
+            <div class="title">Redirect</div>
+            <div class="desc">Navigate to a redirect endpoint.</div>
+            </div>
+            <div class="tags">
+                <span class="tag get">GET</span> 
+            </div>
+        </div>
+      </a>
+
+    </section>
+
+    <!-- Error Testing Section -->
+    <br>
+    <h1>Error Testing</h1>
+    <p class="lead">Send a specific erronous HTTP request to generate its respective error</p>
+    <section class="grid" aria-label="Error testing buttons">
+
+      <!-- Timeout error (504) button -->
+      <a class="card" href="/cgi-bin/loop.cgi" role="link" aria-label="Timeout Error">
+        <div class="icon" aria-hidden="true">
+          <!-- Clock / Timeout SVG -->
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+            <div>
+            <div class="title">Timeout Error (504)</div>
+            <div class="desc">Simulate a gateway timeout.</div>
+            </div>
+            <div class="tags">
+                <span class="tag get">GET</span>
+                <span class="tag cgi">CGI</span>
+            </div>
+        </div>
+      </a>
+
+        <!-- Internal Server Error (500) button -->
+        <a class="card" href="/cgi-bin/error.cgi" role="link" aria-label="Internal Server Error">
+            <div class="icon" aria-hidden="true">
+            <!-- Server / error SVG -->
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" 
+                xmlns="http://www.w3.org/2000/svg">
+                <rect x="3" y="4" width="18" height="14" rx="2" 
+                    stroke="currentColor" stroke-width="1.5"/>
+                <path d="M7 8h10M7 12h5" 
+                    stroke="currentColor" stroke-width="1.5" 
+                    stroke-linecap="round"/>
+                <circle cx="17" cy="12" r="1.2" fill="currentColor"/>
+            </svg>
+            </div>
+            <div>
+                <div>
+                    <div class="title">Internal Server Error (500)</div>
+                    <div class="desc">CGI file with error.</div>
+                </div>
+                <div class="tags">
+                    <span class="tag get">GET</span>
+                    <span class="tag cgi">CGI</span>
+                </div>
+            </div>
+        </a>  
+
+        <!-- Page not found (404) button -->
+        <a class="card" href="/sigma.html" role="link" aria-label="Page Not Found">
+        <div class="icon" aria-hidden="true">
+            <!-- Warning / 404 SVG -->
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L2 22h20L12 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+            <path d="M12 9v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="12" cy="17" r="1" fill="currentColor"/>
+            </svg>
+        </div>
+        <div>
+            <div>
+            <div class="title">Page Not Found (404)</div>
+            <div class="desc">Simulate a missing page.</div>
+            </div>
+            <div class="tags">
+                <span class="tag get">GET</span>
+            </div>
+        </div>
+        </a>
+
+        <script>
+            function sendUnknownRequest() {
+              fetch("http://localhost:8080/", { method: "BANANA" })
+                .then(async res => {
+                  // Read the response body (HTML error page) as text
+                  const body = await res.text();
+                  // Replace the whole document with the error page
+                  document.open();
+                  document.write(body);
+                  document.close();
+                })
+                .catch(err => console.error("Request failed:", err));
+            }
+        </script>            
+            
+        <!-- Unknown Request button -->
+        <a class="card" role="link" aria-label="Unknown Request"
+            onclick="sendUnknownRequest()">
+            <div class="icon" aria-hidden="true">
+            <!-- Question mark / unknown SVG -->
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" 
+                    xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M12 13a2.5 2.5 0 1 0-2.5-2.5" 
+                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            </div>
+            <div>
+            <div>
+                <div class="title">Unknown Request</div>
+                <div class="desc">Send an unsupported HTTP method to trigger 501.</div>
+            </div>
+            <div class="tags">
+                <span class="tag">???</span>
+            </div>
+            </div>
+        </a>            
+
+    </section>
+
+    <!-- Bonus Section -->
+    <br>
+    <h1>Bonus</h1>
+    <p class="lead">Bonus Section</p>
+    <section class="grid" aria-label="Error testing buttons">
+
+      <!-- Cookies button -->
+      <a class="card" href="/login" role="link" aria-label="Cookies">
+        <div class="icon" aria-hidden="true">
+          <!-- Cookie SVG -->
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M21 12.3A9 9 0 1 1 11.7 3 7 7 0 0 0 21 12.3z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="12.5" cy="13.5" r=".8" fill="currentColor"/>
+            <circle cx="9.5" cy="10.5" r=".7" fill="currentColor"/>
+            <circle cx="14.5" cy="9.5" r=".6" fill="currentColor"/>
+          </svg>
+        </div>
+        <div>
+            <div>
+            <div class="title">Cookies</div>
+            <div class="desc">Manage cookie settings or view cookies for this site.</div>
+            </div>
+            <div class="tags">
+                <span class="tag post">POST</span>
+            </div>
+        </div>
+      </a>
+
+      <!-- JavaScript CGI -->
+      <a class="card" href="/cgi-bin/js_test.cgi" role="link" aria-label="Cookies">
+        <div class="icon" aria-hidden="true">
+        <!-- JavaScript SVG logo (inline) -->
+        <svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="JavaScript logo">
+            <title>JavaScript</title>
+            <!-- background square -->
+            <rect x="2" y="2" width="44" height="44" rx="6" ry="6" fill="#f7df1e" />
+            <!-- left half of J (path for better rendering) -->
+            <path d="M20.8 33.2c0 4.2-3.1 6.1-6.8 6.1-3.6 0-6.1-1.86-7.27-4.2l3.96-2.33c.92 1.6 1.76 2.86 4.05 2.86 2.08 0 3.41-.8 3.41-3.92V17.9h4.53v15.3z" fill="#000"/>
+            <!-- S shape (approx) -->
+            <path d="M37.5 33.8c0 4.1-3 6.1-6.8 6.1-3.4 0-5.6-1.7-6.68-3.9l3.8-2.28c.78 1.3 1.75 2.36 3.95 2.36 1.64 0 2.69-.66 2.69-1.6 0-1.11-.85-1.5-2.28-2.15l-1.2-.52c-3.46-1.5-5.74-3.4-5.74-7.56 0-3.76 2.87-6.62 7.35-6.62 3.19 0 5.48 1.09 7.07 3.95l-3.65 2.3c-.8-1.44-1.67-2.02-3.42-2.02-1.55 0-2.54.98-2.54 1.97 0 1.09.82 1.47 2.7 2.12l1.2.48c4.06 1.64 6.35 3.7 6.35 7.7z" fill="#000"/>
+        </svg>  
+        </div>
+        <div>
+            <div>
+            <div class="title">JS CGI</div>
+            <div class="desc">Run CGI with a differnt language</div>
+            </div>
+            <div class="tags">
+                <span class="tag get">GET</span>
+            </div>
+        </div>
+      </a>
+
+    </section>
+  </main>
+</body>
+</html>
