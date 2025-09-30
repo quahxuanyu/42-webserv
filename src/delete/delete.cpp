@@ -37,7 +37,7 @@ Response &handle_delete_request(Server &server, Request &request)
     path = request.getUri();
     if (delete_file(path) == true)
     {
-        std::cout << GREEN << "DELETE Success: " << path << RESET << std::endl;
+        std::cout << ORANGE << "* DELETE Success - " << path << RESET << std::endl;
         response->setVersion("HTTP/1.1");
         response->setStatusCode(200);
         response->setBody("File deleted successfully.");

@@ -60,7 +60,7 @@ void Client::processRequest(std::vector<pollfd> *pfds, int pfd_i)
 	send_buf = _response->toString();
 	// delete _response;
 
-	// std::cout << "== RESPONSE: ==\n" << send_buf << std::endl;
+	_response->printTerminal();
 	recv_buf.clear();
 	(*pfds)[pfd_i].events |= POLLOUT;
 	_start_time = 0;
@@ -90,14 +90,14 @@ Response *handle_408_error()
 bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
 {
 	int sender_fd = (*pfds)[pfd_i].fd;
-	std::cout << YELLOW << "Server reading from fd " << sender_fd<< RESET << std::endl;
+	// std::cout << YELLOW << "Server reading from fd " << sender_fd<< RESET << std::endl;
 	char buf[256];
 	int nbytes = recv(sender_fd, buf, sizeof(buf), 0);
 	
 	if (nbytes <= 0)
 	{
 		if (nbytes == 0)
-			std::cout << "pollserver: socket " << sender_fd << " hungup" << std::endl;
+			std::cout << " * Poll socket " << sender_fd << " hungup" << std::endl;
 		else
 			std::cerr << "Error : recv" << std::endl; //throw 
 		return false;
@@ -118,7 +118,7 @@ bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
 
 				send_buf = _response->toString();
 				// delete _response;
-				std::cout << "== RESPONSE: ==\n" << send_buf << std::endl;
+				_response->printTerminal();
 				recv_buf.clear();
 				(*pfds)[pfd_i].events |= POLLOUT;
 				//sleep(10);
@@ -141,13 +141,17 @@ bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
 				//finish reading post request
 				if (body.length() >= content_length)
 				{
+					request.printRequest();
 					std::cout << GREEN << "Finished Receiving Data!" << RESET << std::endl;
 					processRequest(pfds, pfd_i);
 				}
 			}
 			//finish reading get request
 			else
+			{
+				request.printRequest();
 				processRequest(pfds, pfd_i);
+			}
 		}
 		return true;
 	}
@@ -155,7 +159,7 @@ bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
 
 bool Client::send_data(std::vector<pollfd> *pfds, int pfd_i)
 {
-	std::cout << YELLOW << "Server writing to fd " << (*pfds)[pfd_i].fd << RESET << std::endl;
+	std::cout << YELLOW << " * Writing to fd " << (*pfds)[pfd_i].fd << RESET << std::endl;
 
 	int bytes_sent = send(_fd, send_buf.c_str(), send_buf.length(), 0);
 	if (bytes_sent < 0)
@@ -224,6 +228,4 @@ void Client::parse_request()
 	size_t content_length = atoi(request.getHeader("Content-Length").c_str());
 	std::string body = recv_buf.substr(body_start + 4, content_length);
 	request.setBody(body);
-
-	// request.printRequest();
 }

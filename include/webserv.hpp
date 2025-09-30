@@ -39,6 +39,7 @@ Response &handle_get_request(Server &server, Request &request); // Handles GET r
 Response &handle_post_request(Server &server, Request &request); // Handles POST requests and returns a Response object
 Response &handle_delete_request(Server &server, Request &request); // Handles DELETE requests and returns a Response object
 Response &generate_response(std::vector<Server> &servers, Request &request);	 // Processes the request and returns a Response object
+// Standard colors
 #define BLACK     "\033[0;30m"
 #define RED       "\033[0;31m"
 #define GREEN     "\033[0;32m"
@@ -46,7 +47,28 @@ Response &generate_response(std::vector<Server> &servers, Request &request);	 //
 #define BLUE      "\033[0;34m"
 #define MAGENTA   "\033[0;35m"
 #define CYAN      "\033[0;36m"
-#define RESET		"\033[0m"
+#define WHITE     "\033[0;37m"
+
+// Extra nice colors (256-color mode)
+#define ORANGE    "\033[38;5;208m"
+#define PURPLE    "\033[38;5;129m"
+#define PINK      "\033[38;5;200m"
+#define TEAL      "\033[38;5;30m"
+#define LIME      "\033[38;5;118m"
+#define GRAY      "\033[38;5;245m"
+
+// Background colors
+#define BG_BLACK     "\033[40m"
+#define BG_RED       "\033[41m"
+#define BG_GREEN     "\033[42m"
+#define BG_YELLOW    "\033[43m"
+#define BG_BLUE      "\033[44m"
+#define BG_MAGENTA   "\033[45m"
+#define BG_CYAN      "\033[46m"
+#define BG_WHITE     "\033[47m"
+
+// Reset
+#define RESET     "\033[0m"
 
 extern std::map<int, std::vector<Server> > socket_to_servers;  // listen_fd -> matching Server blocks
 extern std::map<int, std::string> httpErrorMessages; 

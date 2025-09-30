@@ -55,7 +55,7 @@ void processGetRequest(const Server &server, Response &response, Request &reques
 	
 	// Get the file path based on the location block
 	file_path = getPath(server, location, uri);
-	std::cout << CYAN << "file path from getpath : " << file_path << RESET << std::endl;
+	// std::cout << CYAN << "file path from getpath : " << file_path << RESET << std::endl;
 	
 	// Check appropriate action according to the location block
 	if (location->hasRedirectUrl())							// Redirection

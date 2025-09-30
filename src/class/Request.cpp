@@ -79,18 +79,28 @@ const std::string &Request::getBody() const {
 
 void Request::printRequest() const
 {
-	std::cout << " == REQUEST == " << std::endl;
-	std::cout << "Is Bad: "  << _isBad << std::endl;
-	std::cout << "Method : " << getMethod() << std::endl;
-	std::cout << "URI : " << getUri() << std::endl;
-	std::cout << "Version : " << getVersion() << std::endl;
-	std::cout << "Headers : " << std::endl;
+    // Box top
+    std::cout << BLUE << "┌───────────────────── REQUEST ─────────────────────┐" << RESET << std::endl;
 
-	std::map<std::string, std::string>::const_iterator it;
-	for (it = _headers.begin(); it != _headers.end(); ++it)
-	{
-		std::cout << it->first<< " : " << it->second << std::endl;
-	}
-	std::cout << "Body : "<< getBody() << std::endl;
-	
+    // Body of the block
+    std::cout << BLUE << "│" << RESET << " Is Bad   : " << (_isBad ? RED "true" RESET : GREEN "false" RESET) << std::endl;
+    std::cout << BLUE << "│" << RESET << " Method   : " << CYAN << getMethod() << RESET << std::endl;
+    std::cout << BLUE << "│" << RESET << " URI      : " << YELLOW << getUri() << RESET << std::endl;
+    std::cout << BLUE << "│" << RESET << " Version  : " << getVersion() << std::endl;
+
+    std::cout << BLUE << "│" << RESET << " Headers  :" << std::endl;
+    for (std::map<std::string, std::string>::const_iterator it = _headers.begin(); it != _headers.end(); ++it)
+    {
+		if (it->first == "Cookie")
+			continue;
+        std::cout << BLUE << "│   " << RESET 
+                  << CYAN << it->first << RESET 
+                  << " : " << it->second << std::endl;
+    }
+
+	//Body
+    // std::cout << BLUE << "│" << RESET << " Body     : " << MAGENTA << getBody() << RESET << std::endl;
+
+    // Box bottom
+    std::cout << BLUE << "└───────────────────────────────────────────────────┘" << RESET << std::endl;
 }

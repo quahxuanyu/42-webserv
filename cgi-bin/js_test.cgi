@@ -1,4 +1,4 @@
-#!/usr/bin/node
+#!/usr/bin/env node
 
 console.log("Content-Type: text/html\r\n\r\n");
 console.log("<h1>this is a javascript test<h1/>\r\n");
