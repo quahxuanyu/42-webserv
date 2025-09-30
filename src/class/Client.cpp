@@ -97,7 +97,7 @@ bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
 	if (nbytes <= 0)
 	{
 		if (nbytes == 0)
-			std::cout << "pollserver: socket " << sender_fd << " hungup" << std::endl;
+			std::cout << " * Poll socket " << sender_fd << " hungup" << std::endl;
 		else
 			std::cerr << "Error : recv" << std::endl; //throw 
 		return false;
@@ -159,7 +159,7 @@ bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
 
 bool Client::send_data(std::vector<pollfd> *pfds, int pfd_i)
 {
-	std::cout << YELLOW << "Server writing to fd " << (*pfds)[pfd_i].fd << RESET << std::endl;
+	std::cout << YELLOW << " * Writing to fd " << (*pfds)[pfd_i].fd << RESET << std::endl;
 
 	int bytes_sent = send(_fd, send_buf.c_str(), send_buf.length(), 0);
 	if (bytes_sent < 0)

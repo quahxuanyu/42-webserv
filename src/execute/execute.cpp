@@ -11,7 +11,7 @@ std::string execute(Request &request, char **env) {
 	}
 
 	std::string cgi_path = request.getUri();
-	std::cout << CYAN << "cgi path :" << cgi_path << RESET << std::endl;
+	std::cout << MAGENTA << " * CGI path - " << cgi_path << RESET << std::endl;
 	char *argv[] = {const_cast<char*>(cgi_path.c_str()), NULL};
 
 	pid_t pid = fork();
@@ -86,6 +86,6 @@ std::string cgi(Request &request) {
 		const_cast<char *>(content_length.c_str()),
 		NULL
 	};
-	std::cout << "CGI Starting!" << std::endl;
+	std::cout << MAGENTA << " * CGI Starting" << RESET << std::endl;
 	return execute(request, envp);;
 }

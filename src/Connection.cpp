@@ -24,7 +24,7 @@ void Connection::add_to_pfds(int client_fd)
 
 	_pfds.push_back(new_fd);
 	_fd_count++;
-	std::cout << "number of socket: " << _fd_count << std::endl;
+	std::cout << " * Number of socket: " << _fd_count << std::endl;
 }
 
 void Connection::accept_connection(int listener_fd)
@@ -44,14 +44,14 @@ void Connection::accept_connection(int listener_fd)
 		_clients[new_fd] = Client(new_fd);
 		_clients[new_fd].socket_fd = listener_fd;
 		add_to_pfds(new_fd);
-		std::cout << GREEN << "Server: new connection from fd " << new_fd << GREEN << std::endl;
+		std::cout << GREEN << " * new connection from fd " << new_fd << GREEN << std::endl;
 	}
 }
 
 void Connection::close_connection(int pfd_i)
 {
 	int fd = _pfds[pfd_i].fd;
-	std::cout << RED << "Closing connection fd " << fd << RESET << std::endl;
+	std::cout << RED << " * Closing connection fd " << fd << RESET << std::endl;
 	_clients.erase(fd);	//remove client from map
 	close(fd);	//close client fd
 
@@ -211,8 +211,8 @@ void Connection::runServers()
 		//iterate through all the servers
 		for (size_t i = 0; i < it->second.size(); i++)
 		{	
-			std::cout << CYAN << "listener fd: " << listener.fd << ", servers: " << RESET <<std::endl;
-			it->second[i].printInfo();
+			std::cout << CYAN << "listener fd: " << listener.fd << ", server: " << i + 1 << RESET <<std::endl;
+			// it->second[i].printInfo();
 		}
 	}
 	_fd_count = _pfds.size();
@@ -234,6 +234,6 @@ void Connection::runServers()
 		}
 		process_connections();
 	}
-	std::cout << RED << "DEBUGGGG" << RESET <<std::endl;
+	std::cout << std::endl << RED << "Shutting down.\nCleaning up..." << RESET <<std::endl;
 	close_all_sockets();
 }

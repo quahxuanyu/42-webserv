@@ -138,7 +138,6 @@ void parse_noncgi_response(Response &response)
 	response.setStatusMessage("OK");
 	std::ifstream src("html/loggedin.html", std::ios::binary);
 	std::string body = read_file(src);
-	std::cout << "BODY BEFORE REPLACE: " << body << std::endl;
 	// body = replaceAll(body, "{{VISIT_COUNT}}", "1");
 	// body = replaceAll(body, "{{USERNAME}}", "Joophang");
 	response.setBody(body);

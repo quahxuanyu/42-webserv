@@ -231,10 +231,11 @@ void checkTokens(std::vector<std::string> tokens)
 
 void validateConfig(std::vector<Server> &servers)
 {
-	std::cout << "Validating config..." << std::endl;
+	std::cout << ORANGE << "Validating config..." << RESET<< std::endl;
 	std::set<std::string> IP_Port_Server;
 	for (size_t i = 0; i < servers.size(); i++)
 	{
+		std::cout << RED << " * Validating Server " << i + 1 << "..." << RESET << std::endl;
 		//check error page
 		std::map<int, std::string> error_pages = servers[i].getErrorPages();
 		std::map<int, std::string>::const_iterator it;
@@ -242,15 +243,13 @@ void validateConfig(std::vector<Server> &servers)
 		{
 			if (!isFile(it->second))
 				throw ParseException("Error page must be a file");}
-
-		//check body size limit
-		if (servers[i].getBodySizeLimit() <= 0)
-			throw ParseException("Client body size limit must be a positive number");
-
-		std::pair<std::set<std::string>::iterator, bool> is_inserted = IP_Port_Server.insert(servers[i].getServerInfo());
-		if (!is_inserted.second)
-			throw ParseException("Duplicate server block");
-	}
+			//check body size limit
+			if (servers[i].getBodySizeLimit() <= 0)
+				throw ParseException("Client body size limit must be a positive number");
+			std::pair<std::set<std::string>::iterator, bool> is_inserted = IP_Port_Server.insert(servers[i].getServerInfo());
+			if (!is_inserted.second)
+				throw ParseException("Duplicate server block");
+		}
 }
 
 std::vector<Server> tokenise(std::string content)
