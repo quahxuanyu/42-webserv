@@ -2,7 +2,6 @@
 
 Location::Location()
 {
-	std::cout << "Location default constructor called" << std::endl;
 	_redirect_code = 0;
 	autoindex = 0;
 	cgi = 0;

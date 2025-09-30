@@ -12,13 +12,12 @@
 #include <unistd.h>
 
 
-struct Session {
+struct Session 
+{
 	bool logged_in;
 	std::map<std::string, std::string> _data;
 	int _visit_count;
 };
-
-
 
 class Server;
 
@@ -47,12 +46,8 @@ class Client {
 		bool recv_data(std::vector<pollfd> *pfds, int pfd_i);
 		bool send_data(std::vector<pollfd> *pfds, int pfd_i);
 		void parse_request();
-		//void store_data();
 		void getSession();
-		// void generate_response();
-		//bool is_time_out();
 
-		//std::string getData(const std::string key);
 
 		Client();
 		Client(int fd);

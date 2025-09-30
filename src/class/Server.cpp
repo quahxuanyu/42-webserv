@@ -2,9 +2,7 @@
 
 Server::Server()
 {
-	//get_listener_socket();
-	//get_listener_socket();
-	std::cout << "Server default constructor called" << _port << std::endl;
+	//std::cout << "Server default constructor called" << _port << std::endl;
 }
 
 Server::Server(std::string IP, std::string port) : _IP(IP), _port(port)

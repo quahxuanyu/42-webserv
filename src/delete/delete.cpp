@@ -2,16 +2,16 @@
 
 bool delete_file(std::string path)
 {
-    if (std::remove(path.c_str()) != 0) {
-        return false; // Deletion failed
-    }
-    return true; // Deletion successful
+	if (std::remove(path.c_str()) != 0) {
+		return false; // Deletion failed
+	}
+	return true; // Deletion successful
 }
 
 Response &handle_delete_request(Server &server, Request &request)
 {
-    Response *response = new Response();
-    std::string path;
+	Response *response = new Response();
+	std::string path;
 
 	std::vector<Location> locations = server.getLocations();
 	const Location *location = matchLocation(locations, request.getUri());

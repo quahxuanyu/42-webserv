@@ -176,6 +176,7 @@ void Connection::process_connections()
 void	ft_signal(int signum)
 {
 	(void)signum;
+	
 	_exit(1);
 }
 
@@ -188,7 +189,6 @@ void Connection::runServers()
 	std::map<int, std::vector<Server> >::iterator it;
 	for (it = socket_to_servers.begin(); it != socket_to_servers.end(); ++it)
 	{
-		
 		pollfd listener;
 		listener.fd = it->first;
 		listener.events = POLLIN;
@@ -203,7 +203,6 @@ void Connection::runServers()
 			it->second[i].printInfo();
 		}
 	}
-
 	_fd_count = _pfds.size();
 	std::cout << "Server: waiting for connections.." << std::endl;
 	while (1)
