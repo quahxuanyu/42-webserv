@@ -1,5 +1,7 @@
 #include "../include/webserv.hpp"
 
+
+
 void print_request(Request &request) {
 	std::cout << request.getMethod() << " "
 				<< request.getUri() << " "

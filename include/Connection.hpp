@@ -27,6 +27,7 @@ private:
 	void handle_client_read(int client_fd);
 	void handle_client_write(int client_fd);
 	void close_connection(int fd);
+	void close_all_sockets();
 };
 
 #endif
