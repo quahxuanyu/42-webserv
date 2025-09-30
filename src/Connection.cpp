@@ -211,7 +211,7 @@ void Connection::runServers()
 		//iterate through all the servers
 		for (size_t i = 0; i < it->second.size(); i++)
 		{	
-			std::cout << CYAN << "listener fd: " << listener.fd << ", server: " << i + 1 << RESET <<std::endl;
+			std::cout << CYAN << "listener fd: " << listener.fd << RESET <<std::endl;
 			// it->second[i].printInfo();
 		}
 	}
