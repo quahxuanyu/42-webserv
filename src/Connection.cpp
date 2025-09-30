@@ -220,7 +220,7 @@ void Connection::runServers()
 	std::cout << GREEN << "42 Webserv: Start up succesful!" << RESET << std::endl;
 	std::cout << YELLOW << "Waiting for Connections..." << RESET << std::endl;
 	std::cout << LIME << "-----------------------------------------" << RESET << std::endl;
-	while (1)
+	while (!g_signal)
 	{
 		signal(SIGINT, ft_signal);
 		int poll_count = poll(_pfds.data(), _fd_count, -1);
