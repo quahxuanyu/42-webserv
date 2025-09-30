@@ -47,7 +47,7 @@ Response &handle_delete_request(Server &server, Request &request)
         else if (server.hasRoot())
             request.setUri(server.getRoot() + request.getUri());
     }
-
+    path = request.getUri();
     if (delete_file(path) == true)
     {
         std::cout << GREEN << "DELETE Success: " << path << RESET << std::endl;
