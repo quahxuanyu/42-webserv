@@ -31,10 +31,9 @@ Response &generate_response(std::vector<Server> &servers, Request &request)
 	}
 	else
 	{
-		// If the method is not suppsten 127.0.0.1:4243, return a 501 Not Implemented response
-		Response *response = new Response("HTTP/1.1", 501, "Not Implemented");
-		response->addHeader("Content-Type", "text/plain");
-		response->setBody("Method Not Implemented");
+		// If the method is not supported, return a 501 Not Implemented response
+		Response *response = new Response();
+		handle_response_error(*response, server.getPage(501), 501);
 		return *response;
 	}
 }
