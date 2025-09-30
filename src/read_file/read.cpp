@@ -9,7 +9,6 @@ void normal_file_response(Response &response, const Server &server, std::string 
 		// If the file cannot be opened, set the response status to 404
 		return (handle_response_error(response, server.getPage(404), 404));
 	}
-
 	//NO ISSUE/ERROR
 	file_content = read_file(src);
 	src.close();
