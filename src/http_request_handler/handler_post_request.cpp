@@ -25,7 +25,7 @@ void processPostRequest(Server &server, Request &request, Response &response)
 	}
 	else 
 	{
-		handle_response_error(response, server.getPage(501), 501); // Not Implemented for non-CGI POST requests
+		parse_noncgi_response(response);													// Non-CGI (used for cookies)
 	}
 }
 

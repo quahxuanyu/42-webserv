@@ -131,21 +131,23 @@ std::string generateSessionID()
 	return session_id;
 }
 
-Response &parse_noncgi_response()
+void parse_noncgi_response(Response &response)
 {
-    Response *response = new Response("HTTP/1.1", 200, "OK");
+	response.setVersion("HTTP/1.1");
+	response.setStatusCode(200);
+	response.setStatusMessage("OK");
 	std::ifstream src("html/loggedin.html", std::ios::binary);
 	std::string body = read_file(src);
+	std::cout << "BODY BEFORE REPLACE: " << body << std::endl;
 	// body = replaceAll(body, "{{VISIT_COUNT}}", "1");
 	// body = replaceAll(body, "{{USERNAME}}", "Joophang");
-	response->setBody(body);
+	response.setBody(body);
 	src.close();
-	response->addHeader("Connection", "keep-alive");
-	response->addHeader("Content-Length", to_string(response->getBody().length()));
-	response->addHeader("Content-Type", find_mime("html/loggedin.html")); // Extract content type from CGI output
-	response->addHeader("Date", get_current_time());
-	response->addHeader("Server", "Webserv/1.0"); // ** TEMPORARY, wait until config file is implemented **
-	return *response;
+	response.addHeader("Connection", "keep-alive");
+	response.addHeader("Content-Length", to_string(response.getBody().length()));
+	response.addHeader("Content-Type", find_mime("html/loggedin.html")); // Extract content type from CGI output
+	response.addHeader("Date", get_current_time());
+	response.addHeader("Server", "Webserv/1.0"); // ** TEMPORARY, wait until config file is implemented **
 }
 
 Session createSession(Request &request)

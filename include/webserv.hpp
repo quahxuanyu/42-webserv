@@ -100,7 +100,10 @@ void autoindex(Response &response, Request &request, std::string dir_path);
 
 // REDIRECTION.CPP
 void redirection(Response &response, Request &request, Location location);
-Response &parse_noncgi_response();
+/**
+ * @brief Handle CGI request and modify the response accordingly (used for cookies)
+ */
+void parse_noncgi_response(Response &response);
 
 //READ.CPP
 /**
