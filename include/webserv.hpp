@@ -17,6 +17,7 @@
 #include <cstdlib>
 #include <dirent.h>
 #include <algorithm>
+#include <signal.h>
 // #include <thread>
 
 #include "Request.hpp"
@@ -30,6 +31,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+
+int g_signal;
 
 //HTTP_REQUEST_HANDLER
 Response &handle_get_request(Server &server, Request &request); // Handles GET requests and returns a Response object
@@ -50,11 +53,7 @@ extern std::map<int, std::string> httpErrorMessages;
 extern std::map<std::string, Session> sessions;
 std::map<int, std::string> createErrorMap();
 
-
 std::vector<Server> parseConfigFile(char *file);
-
-
-
 
 // HELPER.CPP
 std::string to_string(int value); // Converts an integer to a string

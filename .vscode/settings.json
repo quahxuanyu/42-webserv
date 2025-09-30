@@ -75,6 +75,7 @@
 		"thread": "cpp",
 		"semaphore": "cpp",
 		"span": "cpp",
-		"cinttypes": "cpp"
+		"cinttypes": "cpp",
+		"__tree": "cpp"
 	}
 }

@@ -17,9 +17,7 @@ class ParseException: public std::exception {
 class SyntaxError : public std::runtime_error {
 
 	public:
-
-	//call this only when SyntaxError()
-	explicit SyntaxError(const std::string &msg);
+		SyntaxError(const std::string &msg);
 };
 
 #endif

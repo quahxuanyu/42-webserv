@@ -180,7 +180,7 @@ void updateSession(Session *session, Request &request)
 	std::string body = request.getBody();
 	std::istringstream stream(body);
 	std::string pair;
-	//printSessionData(*session);
+	printSessionData(*session);
 
 	while (std::getline(stream, pair, '&'))
 	{
@@ -193,7 +193,7 @@ void updateSession(Session *session, Request &request)
 		}
 	}
 	session->_visit_count += 1;
-	//printSessionData(*session);
+	printSessionData(*session);
 }
 
 void printAllSessionData()

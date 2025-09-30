@@ -59,7 +59,6 @@ Location parseLocation(std::vector<std::string> tokens, size_t *i)
 			(*i)++;
 	}
 	(*i)++;
-	std::cout << RED<< "debug" << RESET << std::endl;
 	return location;
 }
 
@@ -258,7 +257,8 @@ std::vector<Server> tokenise(std::string content)
 {
 	std::vector<std::string> tokens;
 	size_t i = 0;
-	std::cout << content << std::endl;
+	//std::cout << content << std::endl;
+
 	while (i < content.length())
 	{
 		if (content[i] == ' ')
@@ -275,36 +275,32 @@ std::vector<Server> tokenise(std::string content)
 			i = word_end;
 		}
 	}
-	for (size_t i = 0; i < tokens.size(); i++)
-		std::cout << "token [" << i << "] : "<<tokens[i] << std::endl;
+	// for (size_t i = 0; i < tokens.size(); i++)
+	// 	std::cout << "token [" << i << "] : "<<tokens[i] << std::endl;
 	try
 	{
 		checkTokens(tokens);
 		std::vector<Server> servers = parseServer(tokens);
-		for (size_t i = 0; i < servers.size(); i++)
-			servers[i].printInfo();
+		// for (size_t i = 0; i < servers.size(); i++)
+		// 	servers[i].printInfo();
 		validateConfig(servers);
 		std::cout << GREEN << "No issue!" << RESET << std::endl;
 		return (servers);
 	}
 	catch (SyntaxError &e)
 	{
-		std::cerr << RED << "Config file " << e.what() << RESET << std::endl;
+		std::cerr << RED << "Config file syntax error: " << e.what() << RESET << std::endl;
 		_exit(1);
 	}
-
 	catch (ParseException &e)
 	{
 		std::cerr << RED << "Config file parsing error: " << e.what() << RESET << std::endl;
 		_exit(1);
 	}
-	
-
 }
 
 std::vector<Server> parseConfigFile(char *file)
 {
-	std::cout << file << std::endl;
 	std::string content;
 	std::string line;
 	std::ifstream ConfigFile(file);

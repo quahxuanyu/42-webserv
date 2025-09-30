@@ -12,18 +12,15 @@ void print_request(Request &request) {
 
 int main(int argc, char **argv)
 {
-	(void)argc;
-	(void)argv;
-	// if (argc != 2)
-	// 	return (std::cout << "Incorrect number of arguments" << std::endl, 2);
+	if (argc != 2)
+		return (std::cout << "Incorrect number of arguments" << std::endl, 2);
 	std::vector<Server> servers = parseConfigFile(argv[1]);
-
-    try 
+	try 
 	{
 		Connection connection(servers);
 		connection.runServers();
-		
-    } 
+	    
+	}
 	catch (std::runtime_error &e)
 	{
 		std::cerr << RED << "Runtime Error: " << e.what() << RESET << std::endl;
