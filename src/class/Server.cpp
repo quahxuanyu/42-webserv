@@ -1,11 +1,11 @@
 #include "../../include/webserv.hpp"
 
-Server::Server()
+Server::Server() : _body_size(LONG_MAX)
 {
 	//std::cout << "Server default constructor called" << _port << std::endl;
 }
 
-Server::Server(std::string IP, std::string port) : _IP(IP), _port(port)
+Server::Server(std::string IP, std::string port) : _IP(IP), _port(port), _body_size(LONG_MAX)
 {
 	// get_listener_socket();
 	// std::cout << "Server (" << _IP << " " << _port << ") created, fd: " << _listener_fd << std::endl;

@@ -36,17 +36,17 @@ void Client::getSession()
 void Client::addSessionData()
 {
 	//add cookie to response
-	response->addHeader("Set-Cookie", "session_id=" + _session_id);
+	_response->addHeader("Set-Cookie", "session_id=" + _session_id);
 
 	//update visit count
-	std::string body = response->getBody();
+	std::string body = _response->getBody();
 	body = replaceAll(body, "{{VISIT_COUNT}}", to_string(_session->_visit_count));
 	body = replaceAll(body, "{{USERNAME}}", _session->_data["username"]);
 
-	response->setBody(body);
+	_response->setBody(body);
 
 	//update content length
-	response->addHeader("Content-Length", to_string(response->getBody().length()));
+	_response->addHeader("Content-Length", to_string(_response->getBody().length()));
 
 }
 
@@ -54,11 +54,12 @@ void Client::processRequest(std::vector<pollfd> *pfds, int pfd_i)
 {
 	//request.printRequest();
 	getSession();
-	response = &generate_response(socket_to_servers[socket_fd], request);
+	_response = &generate_response(socket_to_servers[socket_fd], request);
 	addSessionData();
 
-	send_buf = response->toString();
-	delete response;
+	send_buf = _response->toString();
+	// delete _response;
+
 	std::cout << "== RESPONSE: ==\n" << send_buf << std::endl;
 	recv_buf.clear();
 	(*pfds)[pfd_i].events |= POLLOUT;
@@ -81,6 +82,8 @@ Response *handle_408_error()
 	response->setStatusMessage(httpErrorMessages[408]);
 	set_headers(*response);
 	response->addHeader("Connection", "closed");
+	response->close_connection = true;
+
 	return response;
 }
 
@@ -111,10 +114,10 @@ bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
 				(*pfds)[pfd_i].events &= ~ POLLIN;
 
 				std::cout << RED << "Request takes too long" << RESET << std::endl;
-				response = handle_408_error();
+				_response = handle_408_error();
 
-				send_buf = response->toString();
-				delete response;
+				send_buf = _response->toString();
+				// delete _response;
 				std::cout << "== RESPONSE: ==\n" << send_buf << std::endl;
 				recv_buf.clear();
 				(*pfds)[pfd_i].events |= POLLOUT;
@@ -169,8 +172,12 @@ bool Client::send_data(std::vector<pollfd> *pfds, int pfd_i)
 	}
 
 	//if connection set to closed
-	if ((response->getHeader("Connection")) == "closed")
+	if ((_response->getHeader("Connection")) == "closed")
+	{	
+		delete _response;
 		return false;
+	}
+	delete _response;
 	return true;
 }
 

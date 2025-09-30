@@ -224,7 +224,10 @@ void handle_response_error(Response &response, std::string path, int error_code)
 {
 	set_headers(response);
 	if (error_code == 504)
+	{	
 		response.addHeader("Connection", "closed");
+		response.close_connection = true;
+	}
 	response.setVersion("HTTP/1.1");
 	response.setStatusCode(error_code);
 	response.setStatusMessage(httpErrorMessages[error_code]);
