@@ -216,8 +216,11 @@ void Connection::runServers()
 		}
 	}
 	_fd_count = _pfds.size();
-	std::cout << "Server: waiting for connections.." << std::endl;
-	while (!g_signal)
+	std::cout << LIME << "-----------------------------------------" << RESET << std::endl;	
+	std::cout << GREEN << "42 Webserv: Start up succesful!" << RESET << std::endl;
+	std::cout << YELLOW << "Waiting for Connections..." << RESET << std::endl;
+	std::cout << LIME << "-----------------------------------------" << RESET << std::endl;
+	while (1)
 	{
 		signal(SIGINT, ft_signal);
 		int poll_count = poll(_pfds.data(), _fd_count, -1);

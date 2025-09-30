@@ -26,7 +26,7 @@ class Response {
 		void setStatusMessage(const std::string mesg);
 		void addHeader(const std::string key, const std::string value);
 		void setBody(const std::string body);
-
+		
 		const std::string &getPath() const;
 		const std::string &getVersion() const;
 		int getStatusCode() const;
@@ -35,6 +35,8 @@ class Response {
 		const std::string &getHeader(std::string key) const;
 		const std::string &getBody() const;
 		std::string toString() const;
-};
+
+		void printTerminal() const;
+	};
 
 #endif
