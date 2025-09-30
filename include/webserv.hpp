@@ -33,7 +33,6 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-// int g_signal;
 
 //HTTP_REQUEST_HANDLER
 Response &handle_get_request(Server &server, Request &request); // Handles GET requests and returns a Response object

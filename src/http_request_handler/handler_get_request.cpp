@@ -47,7 +47,7 @@ void processGetRequest(const Server &server, Response &response, Request &reques
 	std::string file_path;
 	std::vector<Location> locations = server.getLocations();
 	const Location *location = matchLocation(locations, uri); //1. Match the location block
-	location->printInfo();
+	// location->printInfo();
 
 	// Check if method is allowed on location block
 	if(!location->getMethods().count("GET"))

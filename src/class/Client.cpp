@@ -60,7 +60,7 @@ void Client::processRequest(std::vector<pollfd> *pfds, int pfd_i)
 	send_buf = _response->toString();
 	// delete _response;
 
-	std::cout << "== RESPONSE: ==\n" << send_buf << std::endl;
+	// std::cout << "== RESPONSE: ==\n" << send_buf << std::endl;
 	recv_buf.clear();
 	(*pfds)[pfd_i].events |= POLLOUT;
 	_start_time = 0;
@@ -225,5 +225,5 @@ void Client::parse_request()
 	std::string body = recv_buf.substr(body_start + 4, content_length);
 	request.setBody(body);
 
-	request.printRequest();
+	// request.printRequest();
 }

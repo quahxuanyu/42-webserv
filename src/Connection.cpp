@@ -173,11 +173,23 @@ void Connection::process_connections()
 	}
 }
 
+int g_signal = 0;
+
+
 void	ft_signal(int signum)
 {
 	(void)signum;
-	
-	_exit(1);
+	g_signal = 1;
+	// _exit(1);
+}
+
+void Connection::close_all_sockets()
+{
+	for (int i = 0; i < _fd_count; i++)
+	{
+		int fd = (_pfds)[i].fd;
+		close(fd);
+	}
 }
 
 void Connection::runServers()
@@ -205,12 +217,20 @@ void Connection::runServers()
 	}
 	_fd_count = _pfds.size();
 	std::cout << "Server: waiting for connections.." << std::endl;
-	while (1)
+	while (!g_signal)
 	{
 		signal(SIGINT, ft_signal);
 		int poll_count = poll(_pfds.data(), _fd_count, -1);
+		
 		if (poll_count == -1)
-			throw std::runtime_error("poll failed");
+		{
+			if (errno == EINTR) // signal detected
+                continue;
+			else
+				throw std::runtime_error("poll failed");
+		}
 		process_connections();
 	}
+	std::cout << RED << "DEBUGGGG" << RESET <<std::endl;
+	close_all_sockets();
 }
