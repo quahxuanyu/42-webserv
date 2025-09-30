@@ -40,7 +40,6 @@ Response &generate_response(std::vector<Server> &servers, Request &request)
 		// If the method is not supported, return a 501 Not Implemented response
 		Response *response = new Response();
 		handle_response_error(*response, server.getPage(501), 501);
-
 		return *response;
 	}
 }

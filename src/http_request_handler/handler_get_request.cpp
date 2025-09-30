@@ -28,7 +28,6 @@ std::string getPath(const Server &server, const Location *location, std::string 
 	}
 	if (isDirectory(file_path) && location->hasIndex())
 			file_path += location->getIndex();
-
 	//file_path should be a valid path now
 	if (!isFileNoCwd(file_path) && !location->autoindex)
 		return "";
@@ -50,54 +49,28 @@ void processGetRequest(const Server &server, Response &response, Request &reques
 	const Location *location = matchLocation(locations, uri); //1. Match the location block
 	location->printInfo();
 
-	// 2. Check if method is allowed on location block
+	// Check if method is allowed on location block
 	if(!location->getMethods().count("GET"))
 		return (handle_response_error(response, server.getPage(405), 405));
 	
-	//3. Get the file path based on the location block
+	// Get the file path based on the location block
 	file_path = getPath(server, location, uri);
-
 	std::cout << CYAN << "file path from getpath : " << file_path << RESET << std::endl;
-
-	// 4. Check appropriate action according to the location block
-	if (location->hasRedirectUrl()) // Redirection
-		redirection(response, request, *location);
-	else if (location->autoindex && isDirectory(file_path)) // Autoindex
-		autoindex(response, request, file_path);
-	else if (file_path.find(".cgi") != std::string::npos) 
+	
+	// Check appropriate action according to the location block
+	if (location->hasRedirectUrl())							// Redirection
 	{
-		if (location->hasRoot() || location->hasAlias() || server.hasRoot())
-		{
-			if (location->hasRoot())
-				request.setUri(location->getRoot() + request.getUri());
-			else if (location->hasAlias())
-			{
-				std::string suffix = request.getUri().substr(location->getPath().length()); // get substring after location path (replace location path)
-				if (suffix.empty() || suffix[0] != '/')
-					suffix = "/" + suffix; // ensure it starts with a slash
-				request.setUri(location->getAlias() + suffix);
-			}
-			else if (server.hasRoot())
-				request.setUri(server.getRoot() + request.getUri());
-		}
-		// request.setUri(file_path); // Set the URI to the CGI script path
-		// If it is a CGI request, execute the CGI script
-		std::string cgi_response = cgi(request);
-
-		if (cgi_response.find("Error") != std::string::npos)
-			handle_response_error(response, server.getPage(500), 500);
-		else {
-			// infinite loop in CGI
-			if (cgi_response.empty())
-				handle_response_error(response, server.getPage(504), 504);
-			//execve failed: incorrect path
-			else if (cgi_response == "500")
-				handle_response_error(response, server.getPage(500), 500);
-			else
-				parse_cgi_response(response, cgi_response); // Parse the CGI response and return it
-		}
+		redirection(response, request, *location);
 	}
-	else // Return Normal File
+	else if (location->autoindex && isDirectory(file_path)) // Autoindex
+	{
+		autoindex(response, request, file_path);
+	}
+	else if (file_path.find(".cgi") != std::string::npos)	// CGI
+	{
+		handle_cgi(request, response, server, location); 
+	}
+	else													// Return Normal File
 	{
 		response.setPath(file_path);
 		normal_file_response(response, server, file_path);

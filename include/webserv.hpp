@@ -72,6 +72,13 @@ void handle_response_error(Response &response, std::string path, int error_code)
  * Changes %XX to the corresponding character and + to space.
  */
 std::string urlDecode(const std::string &src);
+/**
+ * @brief Process the requst based on the location block matched
+ * @param server The server object containing the configuration
+ * @param request The request object containing the request details
+ * @param location The location object containing the configuration for the matched location
+ */
+void processLocationRequest(const Server &server, Request &request, const Location *location);
 
 //EXECUTE.CPP
 std::string execute(Request &request, char **env);
@@ -125,4 +132,14 @@ std::string defaultErrorPage(int error_code);
  * @param src The input file stream to read from.
  */
 std::string read_file(std::ifstream &src);
+
+//CGI.COO
+/**
+ * @brief Handle CGI request and modify the response accordingly
+ * @param request The request object containing the request details
+ * @param response The response object to set the CGI response
+ * @param server The server object containing the configuration
+ * @param location The location object containing the configuration for the matched location
+ */
+void handle_cgi(Request &request, Response &response, const Server &server, const Location *location);
 #endif

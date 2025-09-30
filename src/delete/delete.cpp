@@ -33,20 +33,7 @@ Response &handle_delete_request(Server &server, Request &request)
 	}
 
     // Check Alias & Root
-    if (location->hasRoot() || location->hasAlias() || server.hasRoot())
-    {
-        if (location->hasRoot())
-            request.setUri(location->getRoot() + request.getUri());
-        else if (location->hasAlias())
-        {
-            std::string suffix = request.getUri().substr(location->getPath().length()); // get substring after location path (replace location path)
-            if (suffix.empty() || suffix[0] != '/')
-                suffix = "/" + suffix; // ensure it starts with a slash
-            request.setUri(location->getAlias() + suffix);
-        }
-        else if (server.hasRoot())
-            request.setUri(server.getRoot() + request.getUri());
-    }
+    processLocationRequest(server, request, location);
     path = request.getUri();
     if (delete_file(path) == true)
     {
