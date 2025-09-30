@@ -257,8 +257,7 @@ std::vector<Server> tokenise(std::string content)
 {
 	std::vector<std::string> tokens;
 	size_t i = 0;
-	//std::cout << content << std::endl;
-
+	
 	while (i < content.length())
 	{
 		if (content[i] == ' ')

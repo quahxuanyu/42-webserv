@@ -29,18 +29,18 @@ class Client {
 		std::string recv_buf;	//store incoming request data
 		std::string send_buf;	//store outgoing response
 		Request request;	//store HTTP request (obj)
-		Response *response;
+		Response *_response;
 		
 		time_t _start_time;	//timeout handling
 		// bool header_parsed;		//check if header has fully received
-		// bool keep_alive;	//check if the connection should be closed
-
+		
 		// USER DATA //
 		std::string _session_id;
 		Session *_session;
 
 	public:
 		int socket_fd;		//server that client connects to 
+
 		void addSessionData();
 		void processRequest(std::vector<pollfd> *pfds, int pfd_i);
 		bool recv_data(std::vector<pollfd> *pfds, int pfd_i);
