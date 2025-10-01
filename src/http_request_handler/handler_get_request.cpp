@@ -28,6 +28,7 @@ std::string getPath(const Server &server, const Location *location, std::string 
 	}
 	if (isDirectory(file_path) && location->hasIndex())
 			file_path += location->getIndex();
+			
 	//file_path should be a valid path now
 	if (!isFileNoCwd(file_path) && !location->getAutoIndex())
 		return "";

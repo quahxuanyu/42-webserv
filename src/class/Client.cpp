@@ -1,4 +1,3 @@
-#include "../../include/Client.hpp"
 #include "../../include/webserv.hpp"
 
 std::map<std::string, Session> sessions;

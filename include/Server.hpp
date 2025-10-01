@@ -9,7 +9,6 @@
 
 class Server {
 	private:
-		//int _listener_fd;  //listener's socket fd
 		std::string _IP;  //IP to bind
 		std::string _port;	//port listening to
 		std::string _server_name; 
@@ -20,10 +19,7 @@ class Server {
 		std::vector<pollfd> _pfds;  //list of fd the poll is watching
 		std::map<int, Client> _clients;   //map of {fd : client}
 		std::map<int, std::string> status_codes;  // status code -> status msg
-		//int _fd_count;
 
-		
-		
 		public:
 		Server();
 		Server(std::string IP, std::string port);
@@ -32,13 +28,6 @@ class Server {
 		void setBodySize(long size);
 		void setErrorPage(int status, std::string page);
 		void addLocation(Location location);
-
-		// void accept_connection(int _listener_fd);
-		// void close_connection(int pfd_i);
-
-		// void add_to_pfds(int new_fd);
-		// void handle_client_read(int pfd_i);
-		// void handle_client_write(int pfd_i);
 
 		std::string getIp() const;
 		std::string getPort() const;

@@ -7,7 +7,6 @@ private:
 	int _fd_count;
 	std::vector<Server> _servers;
 	std::map<std::pair<std::string, std::string>, std::vector<Server> > _addr_server; // map of {[ip, port], servers}
-	//std::vector<BindSocket> _listening_sockets; //match : ip, port - socket fd - servers
 	std::vector<pollfd> _pfds;  //list of sockets poll is watching
 	std::set<int> listening_fds;	//set of listening sockets
 	std::map<int, Client> _clients;   //map of {fd : client}
