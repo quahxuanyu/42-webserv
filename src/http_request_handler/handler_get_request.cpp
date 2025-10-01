@@ -29,7 +29,7 @@ std::string getPath(const Server &server, const Location *location, std::string 
 	if (isDirectory(file_path) && location->hasIndex())
 			file_path += location->getIndex();
 	//file_path should be a valid path now
-	if (!isFileNoCwd(file_path) && !location->autoindex)
+	if (!isFileNoCwd(file_path) && !location->getAutoIndex())
 		return "";
 
 	return file_path;
@@ -55,14 +55,13 @@ void processGetRequest(const Server &server, Response &response, Request &reques
 	
 	// Get the file path based on the location block
 	file_path = getPath(server, location, uri);
-	// std::cout << CYAN << "file path from getpath : " << file_path << RESET << std::endl;
 	
 	// Check appropriate action according to the location block
 	if (location->hasRedirectUrl())							// Redirection
 	{
 		redirection(response, request, *location);
 	}
-	else if (location->autoindex && isDirectory(file_path)) // Autoindex
+	else if (location->getAutoIndex() && isDirectory(file_path)) // Autoindex
 	{
 		autoindex(response, request, file_path);
 	}

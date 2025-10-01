@@ -3,7 +3,7 @@
 Location::Location()
 {
 	_redirect_code = 0;
-	autoindex = 0;
+	_autoindex = 0;
 	cgi = 0;
 }
 
@@ -29,7 +29,7 @@ void Location::setIndex(std::string index)
 
 void Location::setAutoIndex(int on)
 {
-	autoindex = on;
+	_autoindex = on;
 }
 
 void Location::setMethod(std::string method)
@@ -47,11 +47,6 @@ void Location::setRedirectUrl(std::string url)
 	_redirect_url = url;
 }
 
-void Location::setCGI(int on)
-{
-	cgi = on;
-}
-
 std::string Location::getRedirectUrl() const
 {
 	return _redirect_url;
@@ -60,6 +55,11 @@ std::string Location::getRedirectUrl() const
 size_t Location::getRedirectCode() const
 {
 	return _redirect_code;
+}
+
+bool Location::getAutoIndex() const
+{
+	return _autoindex;
 }
 
 bool Location::hasRoot () const
@@ -114,7 +114,7 @@ void Location::printInfo() const
 	std::cout << "Alias : " << _alias << std::endl;
 	std::cout << "Index : " << _index << std::endl;
 	std::cout << "CGI : " << cgi << std::endl;
-	std::cout << "AutoIndex : " << autoindex << std::endl;
+	std::cout << "AutoIndex : " << _autoindex << std::endl;
 	std::cout << "Redirect Code : " << _redirect_code << std::endl;
 	std::cout << "Redirect Url : " << _redirect_url << std::endl;
 	std::cout << "Methods : " << std::endl;

@@ -138,8 +138,6 @@ void parse_noncgi_response(Response &response)
 	response.setStatusMessage("OK");
 	std::ifstream src("html/loggedin.html", std::ios::binary);
 	std::string body = read_file(src);
-	// body = replaceAll(body, "{{VISIT_COUNT}}", "1");
-	// body = replaceAll(body, "{{USERNAME}}", "Joophang");
 	response.setBody(body);
 	src.close();
 	response.addHeader("Connection", "keep-alive");
@@ -197,23 +195,6 @@ void updateSession(Session *session, Request &request)
 	// printSessionData(*session);
 }
 
-void printAllSessionData()
-{
-	std::cout << "==== SESSSIONSSSS ====" << std::endl;
-	std::map<std::string, Session>::iterator i;
-	for (i = sessions.begin(); i != sessions.end(); ++i)
-	{
-		std::cout << "Session id: [" << i->first << "]" << std::endl;
-		std::cout << RED << "USERNAME: " << i->second._data["username"] << RESET <<std::endl; 
-		std::cout << RED << "VISIT COUNT: " << i->second._visit_count << RESET <<std::endl; 
-	}
-}
-
-void printSessionData(Session &session)
-{
-	std::cout << RED << "USERNAME: " << session._data["username"] << RESET <<std::endl; 
-	std::cout << RED << "VISIT COUNT: " << session._visit_count << RESET <<std::endl; 
-}
 
 /**
  * @brief Handles the response error response

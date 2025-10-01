@@ -11,7 +11,7 @@ class Location {
 		std::string _root;
 		std::string _alias;
 		std::string _index;
-
+		bool _autoindex;
 
 		//bool _redirect;
 		std::set<std::string> _methods;
@@ -20,7 +20,7 @@ class Location {
 
 	public:
 
-		bool autoindex;
+		
 		bool cgi;
 
 		Location();
@@ -32,8 +32,7 @@ class Location {
 		void setMethod(std::string);
 		void setRedirectCode(int code);
 		void setRedirectUrl(std::string url);
-		void setCGI(int on);
-
+		
 		bool hasRoot () const;
 		bool hasAlias () const;
 		bool hasIndex () const;
@@ -46,6 +45,7 @@ class Location {
 		std::string getPath() const;
 		std::string getRedirectUrl() const;
 		size_t getRedirectCode() const;
+		bool getAutoIndex() const;
 		void printInfo() const;
 };
 

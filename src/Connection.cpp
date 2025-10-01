@@ -27,6 +27,7 @@ void Connection::add_to_pfds(int client_fd)
 	std::cout << " * Number of socket: " << _fd_count << std::endl;
 }
 
+// Accept and register new client
 void Connection::accept_connection(int listener_fd)
 {
 	struct sockaddr_storage client_addr;
@@ -40,14 +41,19 @@ void Connection::accept_connection(int listener_fd)
 		throw std::runtime_error("Accept failed");
 	else
 	{
-		//create new client and add to the map
+		// Create a new Client object associated with this file descriptor
 		_clients[new_fd] = Client(new_fd);
+
+		 // Store which listening socket accepted this client
 		_clients[new_fd].socket_fd = listener_fd;
+
+		// Add the new client socket to the pollfd list so poll() monitors it
 		add_to_pfds(new_fd);
 		std::cout << GREEN << " * new connection from fd " << new_fd << GREEN << std::endl;
 	}
 }
 
+// Clean up and close client connection
 void Connection::close_connection(int pfd_i)
 {
 	int fd = _pfds[pfd_i].fd;
@@ -55,7 +61,7 @@ void Connection::close_connection(int pfd_i)
 	_clients.erase(fd);	//remove client from map
 	close(fd);	//close client fd
 
-	// _pfds[pfd_i] = _pfds[_fd_count - 1];	//replace it with the last pfds (efficiency)
+	// Remove this fd from the pollfd vector 
 	_pfds.erase(_pfds.begin() + pfd_i);
 	_fd_count--;
 }
@@ -74,6 +80,18 @@ void Connection::handle_client_write(int pfd_i)
 		close_connection(pfd_i);
 }
 
+
+/**
+ * @brief Create and returns a listening socket bound to the given ip:port.
+ * @param ip   The IP address to bind (use "0.0.0.0" for all interfaces).
+ * @param port The port number as a string (e.g. "8080").
+ * @return     File descriptor of the listening socket.
+ * @throws     std::runtime_error if any step fails.
+ */
+
+// reserves an IP + port on your machine
+// allows the OS to accept incoming TCP connections here
+// sets up the socket so other devices can connect to it.
 int Connection::get_listener_socket(const std::string &ip, const std::string &port)
 {
 	int listener;
@@ -92,7 +110,8 @@ int Connection::get_listener_socket(const std::string &ip, const std::string &po
 	status = getaddrinfo(ip.c_str(), port.c_str() , &hints, &ai);
 	if (status)
 		throw std::runtime_error("getaddrinfo failed: " + std::string(gai_strerror(status)));
-	
+
+	// Loop through results and try to create + bind a socket
 	for (p = ai; p != NULL; p = p->ai_next)
 	{
 		//look for a valid socket
@@ -102,6 +121,7 @@ int Connection::get_listener_socket(const std::string &ip, const std::string &po
 
 		// allow addr reuse
 		setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
+		// bind socket to address
 		if (bind(listener, p->ai_addr, p->ai_addrlen) < 0)
 		{
 			close(listener);
@@ -120,7 +140,7 @@ int Connection::get_listener_socket(const std::string &ip, const std::string &po
 	//done with addrinfo
 	freeaddrinfo(ai);
 
-	//listen
+	// Put socket into listening state
 	if (listen(listener, 10) == -1)
 	{
 		close(listener);
@@ -136,7 +156,7 @@ void Connection::add_listener_socket()
 	//group servers according to Ip & Port
 	group_servers();
 
-	//get listener socket for each ip port combo
+	//get listener socket for each unique key (ip-port)
 	std::map<std::pair<std::string, std::string>, std::vector<Server> >::iterator itr ;
 	for (itr = _addr_server.begin(); itr != _addr_server.end(); ++itr)
 	{
@@ -151,25 +171,27 @@ void Connection::add_listener_socket()
 //iterate through all the sockets in pfds
 void Connection::process_connections()
 {
+	// Iterate through all monitored file descriptors
 	for (int i = 0; i < _fd_count; i++)
 	{
 		int fd = (_pfds)[i].fd;
 
-		//if listening socket get POLLIN
+		// Case 1: A listening socket has incoming data (new client connection)
+		// Accept and register new client
 		if (listening_fds.count(fd) && (_pfds)[i].revents & POLLIN)
 			accept_connection(fd);
 
-		//if client fd get POLLIN/POLLHUP/POLLOUT
+		// Case 2: A client has disconnected (hang up event)
 		else if ((_pfds)[i].revents & POLLHUP)
 			close_connection(i);
+
+		// Case 3: A client socket is ready to read (incoming request data)
 		else if ((_pfds)[i].revents & POLLIN)
-		{	
 			handle_client_read(i);
-		}
+
+		// Case 4: A client socket is ready to write (send response data)
 		else if ((_pfds)[i].revents & POLLOUT)
-		{	
 			handle_client_write(i);
-		}
 	}
 }
 
@@ -192,6 +214,7 @@ void Connection::close_all_sockets()
 	}
 }
 
+// poll : wait for events on multiple file descriptors
 void Connection::runServers()
 {
 	//_socket_to_servers ready
@@ -211,27 +234,34 @@ void Connection::runServers()
 		//iterate through all the servers
 		for (size_t i = 0; i < it->second.size(); i++)
 		{	
-			std::cout << CYAN << "listener fd: " << listener.fd << RESET <<std::endl;
+			std::cout << CYAN << "Listener fd: " << listener.fd << RESET <<std::endl;
 			// it->second[i].printInfo();
 		}
 	}
+	// Number of fds currently being tracked by poll()
 	_fd_count = _pfds.size();
 	std::cout << LIME << "-----------------------------------------" << RESET << std::endl;	
 	std::cout << GREEN << "42 Webserv: Start up succesful!" << RESET << std::endl;
 	std::cout << YELLOW << "Waiting for Connections..." << RESET << std::endl;
 	std::cout << LIME << "-----------------------------------------" << RESET << std::endl;
+
+	// Main server loop: run until signal (Ctrl+C) stops the server
 	while (!g_signal)
 	{
 		signal(SIGINT, ft_signal);
+
+		// Wait for activity on any socket (blocking, -1 = no timeout)
 		int poll_count = poll(_pfds.data(), _fd_count, -1);
 		
+		// If poll() fails
 		if (poll_count == -1)
 		{
 			if (errno == EINTR) // signal detected
-                continue;
+				continue;
 			else
 				throw std::runtime_error("poll failed");
 		}
+		// Handle any sockets that are ready
 		process_connections();
 	}
 	std::cout << std::endl << RED << "Shutting down.\nCleaning up..." << RESET <<std::endl;

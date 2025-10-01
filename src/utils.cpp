@@ -75,21 +75,47 @@ std::string read_file(std::ifstream &src)
 	return (content);
 }
 
-std::map<int, std::string> createErrorMap()
+void createErrorMap()
 {
-	std::map<int, std::string> m;
-	m[400] = "Bad Request";
-	m[401] = "Unauthorized";
-	m[403] = "Forbidden";
-	m[404] = "Not Found";
-	m[405] = "Method Not Allowed";
-	m[408] = "Request Timeout";
-	m[411] = "Length Required";
-	m[413] = "Payload Too Large";
-	m[500] = "Internal Server Error";
-	m[501] = "Not Implemented";
-	m[504] = "Gateway Timeout";
-	m[505] = "HTTP Version Not Supported";
-	return m;
+	httpErrorMessages[400] = "Bad Request";
+	httpErrorMessages[401] = "Unauthorized";
+	httpErrorMessages[403] = "Forbidden";
+	httpErrorMessages[404] = "Not Found";
+	httpErrorMessages[405] = "Method Not Allowed";
+	httpErrorMessages[408] = "Request Timeout";
+	httpErrorMessages[411] = "Length Required";
+	httpErrorMessages[413] = "Payload Too Large";
+	httpErrorMessages[500] = "Internal Server Error";
+	httpErrorMessages[501] = "Not Implemented";
+	httpErrorMessages[504] = "Gateway Timeout";
+	httpErrorMessages[505] = "HTTP Version Not Supported";
 }
-std::map<int, std::string> httpErrorMessages = createErrorMap();
+
+void print_request(Request &request)
+{
+	std::cout << request.getMethod() << " "
+				<< request.getUri() << " "
+				<< request.getVersion() << std::endl;
+	for (std::map<std::string, std::string>::const_iterator it = request.getHeaders().begin(); it != request.getHeaders().end(); ++it)
+	{
+		std::cout << it->first << ": " << it->second << std::endl;
+	}
+}
+
+void printAllSessionData()
+{
+	std::cout << "==== SESSSIONSSSS ====" << std::endl;
+	std::map<std::string, Session>::iterator i;
+	for (i = sessions.begin(); i != sessions.end(); ++i)
+	{
+		std::cout << "Session id: [" << i->first << "]" << std::endl;
+		std::cout << RED << "USERNAME: " << i->second._data["username"] << RESET <<std::endl; 
+		std::cout << RED << "VISIT COUNT: " << i->second._visit_count << RESET <<std::endl; 
+	}
+}
+
+void printSessionData(Session &session)
+{
+	std::cout << RED << "USERNAME: " << session._data["username"] << RESET <<std::endl; 
+	std::cout << RED << "VISIT COUNT: " << session._visit_count << RESET <<std::endl; 
+}

@@ -33,12 +33,6 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-
-//HTTP_REQUEST_HANDLER
-Response &handle_get_request(Server &server, Request &request); // Handles GET requests and returns a Response object
-Response &handle_post_request(Server &server, Request &request); // Handles POST requests and returns a Response object
-Response &handle_delete_request(Server &server, Request &request); // Handles DELETE requests and returns a Response object
-Response &generate_response(std::vector<Server> &servers, Request &request);	 // Processes the request and returns a Response object
 // Standard colors
 #define BLACK     "\033[0;30m"
 #define RED       "\033[0;31m"
@@ -70,10 +64,22 @@ Response &generate_response(std::vector<Server> &servers, Request &request);	 //
 // Reset
 #define RESET     "\033[0m"
 
+//PARSING
+void checkBraces(std::vector<std::string> tokens);
+void checkDirectives(std::vector<std::string> tokens);
+void checkSemicolons(std::vector<std::string> tokens);
+
+//HTTP_REQUEST_HANDLER
+Response &handle_get_request(Server &server, Request &request); // Handles GET requests and returns a Response object
+Response &handle_post_request(Server &server, Request &request); // Handles POST requests and returns a Response object
+Response &handle_delete_request(Server &server, Request &request); // Handles DELETE requests and returns a Response object
+Response &generate_response(std::vector<Server> &servers, Request &request);	 // Processes the request and returns a Response object
+
 extern std::map<int, std::vector<Server> > socket_to_servers;  // listen_fd -> matching Server blocks
 extern std::map<int, std::string> httpErrorMessages; 
 extern std::map<std::string, Session> sessions;
-std::map<int, std::string> createErrorMap();
+
+void createErrorMap();
 
 std::vector<Server> parseConfigFile(char *file);
 
