@@ -23,10 +23,16 @@ Server &matchServer(std::vector<Server> &servers, Request &request)
 Response &generate_response(std::vector<Server> &servers, Request &request)
 {
 	Server &server = matchServer(servers, request);
-	if (request.isBad())
+	if (request.isBad() || request.getUri()[0] != '/' || request.getVersion().substr(0, 5) != "HTTP/")
 	{
 		Response *response = new Response();
 		handle_response_error(*response, server.getPage(400), 400);
+		return *response;
+	}
+	else if (request.getVersion().substr(5) != "1.1")
+	{
+		Response *response = new Response();
+		handle_response_error(*response, server.getPage(505), 505);
 		return *response;
 	}
 	else if (request.getMethod() == "GET")

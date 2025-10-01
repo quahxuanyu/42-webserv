@@ -47,7 +47,6 @@ void Client::addSessionData()
 
 	//update content length
 	_response->addHeader("Content-Length", to_string(_response->getBody().length()));
-
 }
 
 void Client::processRequest(std::vector<pollfd> *pfds, int pfd_i)
@@ -58,10 +57,9 @@ void Client::processRequest(std::vector<pollfd> *pfds, int pfd_i)
 	addSessionData();
 
 	send_buf = _response->toString();
-	// delete _response;
-
 	_response->printTerminal();
 	recv_buf.clear();
+	delete _response;
 	(*pfds)[pfd_i].events |= POLLOUT;
 	_start_time = 0;
 }
@@ -87,6 +85,31 @@ Response *handle_408_error()
 	return response;
 }
 
+// Checks if request is taking too long (> 10s)
+bool Client::check_timeout(std::vector<pollfd> *pfds, int pfd_i)
+{
+	if (!_start_time)
+		_start_time = time(0);
+	else
+	{
+		if (time(NULL) - _start_time >= 10)
+		{
+			(*pfds)[pfd_i].events &= ~ POLLIN;
+
+			std::cout << MAGENTA << " * Request takes too long" << RESET << std::endl;
+			_response = handle_408_error();
+
+			send_buf = _response->toString();
+			_response->printTerminal();
+			recv_buf.clear();
+			delete _response;
+			(*pfds)[pfd_i].events |= POLLOUT;
+			return true;
+		}
+	}
+	return false;
+}
+
 bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
 {
 	int sender_fd = (*pfds)[pfd_i].fd;
@@ -104,27 +127,8 @@ bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
 	}
 	else
 	{
-		//if its the start of a request
-		if (!_start_time)
-			_start_time = time(0);
-		else
-		{
-			if (time(NULL) - _start_time >= 10)
-			{
-				(*pfds)[pfd_i].events &= ~ POLLIN;
-
-				std::cout << RED << "Request takes too long" << RESET << std::endl;
-				_response = handle_408_error();
-
-				send_buf = _response->toString();
-				// delete _response;
-				_response->printTerminal();
-				recv_buf.clear();
-				(*pfds)[pfd_i].events |= POLLOUT;
-				//sleep(10);
-				return true;
-			}
-		}
+		if (check_timeout(pfds, pfd_i))
+			return false;
 
 		recv_buf.append(buf, nbytes);
 
@@ -142,11 +146,11 @@ bool Client::recv_data(std::vector<pollfd> *pfds, int pfd_i)
 				if (body.length() >= content_length)
 				{
 					request.printRequest();
-					std::cout << GREEN << "Finished Receiving Data!" << RESET << std::endl;
+					std::cout << GREEN << " * Finished Receiving Data" << RESET << std::endl;
 					processRequest(pfds, pfd_i);
 				}
 			}
-			//finish reading get request
+			// finish reading get request
 			else
 			{
 				request.printRequest();
@@ -175,14 +179,15 @@ bool Client::send_data(std::vector<pollfd> *pfds, int pfd_i)
 		(*pfds)[pfd_i].events &= ~POLLOUT;
 	}
 
-	//if connection set to closed
-	if ((_response->getHeader("Connection")) == "closed")
-	{	
-		delete _response;
-		return false;
-	}
-	delete _response;
 	return true;
+	//if connection set to closed
+	// if ((_response->getHeader("Connection")) == "closed")
+	// {	
+	// 	delete _response;
+	// 	return false;
+	// }
+	// delete _response;
+	// return true;
 }
 
 void Client::parse_request()

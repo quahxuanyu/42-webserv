@@ -24,15 +24,12 @@ class Server;
 class Client {
 	private:
 		int _fd;		//client socket fd
-		//int _port;		//port used by client;
 		std::string _IP;		//client IP addr
 		std::string recv_buf;	//store incoming request data
 		std::string send_buf;	//store outgoing response
 		Request request;	//store HTTP request (obj)
 		Response *_response;
-		
 		time_t _start_time;	//timeout handling
-		// bool header_parsed;		//check if header has fully received
 		
 		// USER DATA //
 		std::string _session_id;
@@ -47,6 +44,7 @@ class Client {
 		bool send_data(std::vector<pollfd> *pfds, int pfd_i);
 		void parse_request();
 		void getSession();
+		bool check_timeout(std::vector<pollfd> *pfds, int pfd_i);
 
 
 		Client();

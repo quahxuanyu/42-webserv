@@ -6,15 +6,19 @@ Location parseLocation(std::vector<std::string> tokens, size_t *i)
 	Location location;
 	location.setPath(tokens[*i + 1]);
 	*i += 3;
+
+	// Parse tokens until closing brace "}"
 	while (*i < tokens.size() && tokens[*i] != "}")
 	{
 		if (tokens[*i] == "index")
 		{
+			// Set default file
 			location.setIndex(tokens[*i + 1]);
 			*i += 2;
 		}
 		else if (tokens[*i] == "autoindex")
 		{
+			// Enable/disable autoindexing
 			if (tokens[*i + 1] ==  "on")
 				location.setAutoIndex(1);
 			else if (tokens[*i + 1] ==  "off")
@@ -23,16 +27,19 @@ Location parseLocation(std::vector<std::string> tokens, size_t *i)
 		}
 		else if (tokens[*i] == "root")
 		{
+			// Set root directory
 			location.setRoot(tokens[*i + 1]);
 			*i += 2;
 		}
 		else if (tokens[*i] == "alias")
 		{
+			// Set alias directory
 			location.setAlias(tokens[*i + 1]);
 			*i += 2;
 		}
 		else if (tokens[*i] == "methods")
 		{
+			// Allowed HTTP methods (GET, POST, DELETE)
 			size_t j = *i;
 			while (++j < tokens.size() && tokens[j] != ";")
 			{
@@ -47,14 +54,6 @@ Location parseLocation(std::vector<std::string> tokens, size_t *i)
 			location.setRedirectUrl(tokens[*i + 2]);
 			*i += 4;
 		}
-		else if (tokens[*i] == "cgi")
-		{
-			if (tokens[*i + 1] ==  "on")
-				location.setCGI(1);
-			else if (tokens[*i + 1] ==  "off")
-				location.setCGI(0);
-			*i += 2;
-		}
 		else
 			(*i)++;
 	}
@@ -62,6 +61,7 @@ Location parseLocation(std::vector<std::string> tokens, size_t *i)
 	return location;
 }
 
+// Parse a vector of tokens into a list of Server objects.
 std::vector<Server> parseServer(std::vector<std::string> tokens)
 {
 	size_t i = 0;
@@ -69,14 +69,18 @@ std::vector<Server> parseServer(std::vector<std::string> tokens)
 
 	while (i < tokens.size())
 	{
+		// Detect the start of a server block
 		if ((tokens[i] == "server") && (tokens[i + 1] == "{"))
 		{
 			Server server_1;
-			i += 2;
+			i += 2;  // Skip "server" and "{"
+
+			// Parse directives inside the server block until we reach '}'
 			while (i < tokens.size() && tokens[i] != "}")
 			{
 				if (tokens[i] == "listen")
 				{
+					// listen <IP>:<PORT>;
 					size_t colon = tokens[i + 1].find(':');
 					std::string IP = tokens[i + 1].substr(0, colon);
 					std::string port = tokens[i + 1].substr(colon + 1);
@@ -106,6 +110,7 @@ std::vector<Server> parseServer(std::vector<std::string> tokens)
 				}
 				else if (tokens[i] == "location")
 				{
+					// create location block and add to the current server
 					Location location = parseLocation(tokens, &i);
 					server_1.addLocation(location);
 				}
@@ -119,124 +124,61 @@ std::vector<Server> parseServer(std::vector<std::string> tokens)
 	return (servers);
 }
 
-bool isDirective(std::string keyword)
+// Turn the config string into tokens
+std::vector<std::string> tokenise(std::string content)
 {
-	if (keyword == "listen" || keyword == "server_name" || keyword == "root" || keyword == "error_page" 
-	|| keyword == "client_body_size_buf" || keyword == "index" || keyword == "methods" || keyword == "return" 
-	|| keyword == "cgi" || keyword == "autoindex" || keyword == "alias")
-		return true;
-	else 
-		return false;
-}
-
-void checkSemicolons(std::vector<std::string> tokens)
-{
+	std::vector<std::string> tokens;
 	size_t i = 0;
-	while (i < tokens.size())
+	
+	// Go through the entire content character by character
+	while (i < content.length())
 	{
-		if (tokens[i] == "server")
-			i += 2;
-		else if (tokens[i] == "location")
-			i += 3;
-		else if (isDirective(tokens[i]))
-		{
-			std::string directive = tokens[i];
+		if (content[i] == ' ')
 			i++;
-
-			//stop if reach ';' // else raise error 
-			while (!(i >= tokens.size() || tokens[i] == ";" || tokens[i] == "{" || tokens[i] == "}" || isDirective(tokens[i])
-			|| tokens[i] == "server" || tokens[i] == "location"))
-				i++;
-			if (i >= tokens.size() || tokens[i] != ";")
-				throw SyntaxError("Missing ';' after " + directive);
-
-			i++; //skip semicolon
-		}
-		else if (tokens[i] == "{" || tokens[i] == "}")
-			i++;
-		else
-			throw SyntaxError("Unknown keyword : " + tokens[i]);
-	}
-}
-
-void checkDirectives(std::vector<std::string> tokens)
-{
-	std::stack<std::string> stack;
-	std::string prev_token;
-	std::string prev2_token;
-	for (size_t i = 0; i < tokens.size(); i++)
-	{
-		if (tokens[i] == "server")
-		{	
-			if (!stack.empty())
-				throw SyntaxError("server block must be at top-level");
-			stack.push(tokens[i]);
-			if (tokens[i + 1] != "{")
-				throw SyntaxError("server block must be in '{}'");
-		}
-		else if (tokens[i] == "location")
+		else if (content[i] == '{' || content[i] == '}' || content[i] == ';')
+			tokens.push_back(std::string(1, content[i++]));
+		else if (isascii(content[i]))
 		{
-			if (stack.empty() || stack.top() != "server")
-				throw SyntaxError("location block must be inside server block");
-			stack.push(tokens[i]);
-			if (tokens[i + 1][0] != '/' )
-				throw SyntaxError("location block must be given URI");
-			if (tokens[i + 2] != "{")
-				throw SyntaxError("location block must be in '{}'");	
-		}
-		else if (tokens[i] == "{")
-		{
-			if (!(prev_token == "server" || (prev2_token == "location" && prev_token[0] == '/'))) 
-				throw SyntaxError("'{' must follow server or location block");
-		} 
-		else if  (tokens[i] == "}")
-		{
-			if (stack.empty())
-				throw SyntaxError("Unexpected '}'");
-			stack.pop();
-		}
-		prev2_token = prev_token;
-		prev_token = tokens[i];
-	}
-	if (!stack.empty())
-		throw SyntaxError("Unmatched '{'");
-}
+			// extract a "word" token
+			size_t word_end = content.find_first_of(" \t{};", i);
 
-void checkBraces(std::vector<std::string> tokens)
-{
-	std::stack<std::string> stack;
-	for (size_t i = 0; i < tokens.size(); i++)
-	{
-		if (tokens[i] == "{") 
-			stack.push(tokens[i]);
-		else if (tokens[i] == "}")
-		{	if (stack.empty())
-				throw SyntaxError("Unmatched closing brace");
-			stack.pop();}
+			// if no delimiter is found, this is the last word in the content
+			if (word_end == std::string::npos)
+				word_end = content.length();
+
+			// extract the word between i and word_end
+			std::string word = content.substr(i, word_end - i);
+			tokens.push_back(word);
+
+			// move to the end of the word
+			i = word_end;
+		}
 	}
-	if (!stack.empty())
-		throw SyntaxError("Unclosed opening brace");
+	return tokens;
 }
 
 void checkTokens(std::vector<std::string> tokens)
 {
-	//check for balance of '{}'
+	// 1. Check balance of '{' and '}'
 	checkBraces(tokens);
-	// check if server and location followed by {, server comes before location
+
+	// 2. Ensure directives/blocks follow config grammar
 	checkDirectives(tokens);
 
+	// 3. Ensure directives are terminated properly with ';'
 	checkSemicolons(tokens);
 }
-
 
 void validateConfig(std::vector<Server> &servers)
 {
 	std::cout << ORANGE << "Validating config..." << RESET<< std::endl;
+	// Track unique IP:Port combinations to detect duplicates
 	std::set<std::string> IP_Port_Server;
 	for (size_t i = 0; i < servers.size(); i++)
 	{
 		std::cout << RED << " * Validating Server " << i + 1 << "..." << RESET << std::endl;
-		//check error page
+
+		// Each error page must be a valid file
 		std::map<int, std::string> error_pages = servers[i].getErrorPages();
 		std::map<int, std::string>::const_iterator it;
 		for (it = error_pages.begin(); it != error_pages.end(); ++it)
@@ -246,43 +188,56 @@ void validateConfig(std::vector<Server> &servers)
 			//check body size limit
 			if (servers[i].getBodySizeLimit() <= 0)
 				throw ParseException("Client body size limit must be a positive number");
+
+			// Insert (IP:Port) string into set; if already exists, throw error
 			std::pair<std::set<std::string>::iterator, bool> is_inserted = IP_Port_Server.insert(servers[i].getServerInfo());
 			if (!is_inserted.second)
 				throw ParseException("Duplicate server block");
 		}
 }
 
-std::vector<Server> tokenise(std::string content)
+//  Read a configuration file into a string
+std::string readConfigFile(char *file)
 {
-	std::vector<std::string> tokens;
-	size_t i = 0;
-	
-	while (i < content.length())
+	std::string content;
+	std::string line;
+	std::ifstream ConfigFile(file);
+
+	// Read the file line by line
+	while(getline(ConfigFile, line))
 	{
-		if (content[i] == ' ')
-			i++;
-		else if (content[i] == '{' || content[i] == '}' || content[i] == ';')
-			tokens.push_back(std::string(1, content[i++]));
-		else if (isascii(content[i]))
+		size_t start = line.find_first_not_of(" \t");
+		// Process only if the line is not empty or all whitespace
+		if (start != std::string::npos)
 		{
-			size_t word_end = content.find_first_of(" \t{};", i);
-			if (word_end == std::string::npos)
-				word_end = content.length();
-			std::string word = content.substr(i, word_end - i);
-			tokens.push_back(word);
-			i = word_end;
+			// Find the start of a comment
+			size_t comment = line.find("#");
+			if (comment == std::string::npos)
+				comment = line.length();
+			content += line.substr(start, comment - start);
+			// Add a space to separate tokens between lines
+			content += " ";
 		}
 	}
-	// for (size_t i = 0; i < tokens.size(); i++)
-	// 	std::cout << "token [" << i << "] : "<<tokens[i] << std::endl;
+	return content;
+}
+
+// Parse a configuration file into a vector of Server objects
+// Validate tokens and servers
+std::map<int, std::string> httpErrorMessages;
+
+std::vector<Server> parseConfigFile(char *file)
+{
 	try
 	{
+		std::string content = readConfigFile(file);
+		std::vector<std::string> tokens = tokenise(content);
 		checkTokens(tokens);
 		std::vector<Server> servers = parseServer(tokens);
-		// for (size_t i = 0; i < servers.size(); i++)
-		// 	servers[i].printInfo();
 		validateConfig(servers);
-		std::cout << GREEN << "No issue!" << RESET << std::endl;
+		createErrorMap();
+
+		std::cout << GREEN << "Config file OK" << RESET << std::endl;
 		return (servers);
 	}
 	catch (SyntaxError &e)
@@ -295,27 +250,4 @@ std::vector<Server> tokenise(std::string content)
 		std::cerr << RED << "Config file parsing error: " << e.what() << RESET << std::endl;
 		_exit(1);
 	}
-}
-
-std::vector<Server> parseConfigFile(char *file)
-{
-	std::string content;
-	std::string line;
-	std::ifstream ConfigFile(file);
-
-	while(getline(ConfigFile, line))
-	{
-		size_t start = line.find_first_not_of(" \t");
-		// if not empty line
-		if (start != std::string::npos)
-		{
-			size_t comment = line.find("#");
-			if (comment == std::string::npos)
-				comment = line.length();
-			content += line.substr(start, comment - start);
-			content += " ";
-		}
-	}
-	std::vector<Server> servers = tokenise(content); 
-	return (servers);
 }
