@@ -79,7 +79,6 @@ Response *handle_408_error()
 	response->setStatusMessage(httpErrorMessages[408]);
 	set_headers(*response);
 	response->addHeader("Connection", "closed");
-	response->close_connection = true;
 
 	return response;
 }

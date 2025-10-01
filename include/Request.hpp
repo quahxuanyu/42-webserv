@@ -16,7 +16,6 @@ class Request {
 		
 
 	public:
-		bool has_body;
 		Request();
 		Request(std::string method, std::string uri, std::string version);
 		~Request();

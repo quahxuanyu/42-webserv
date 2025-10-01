@@ -35,8 +35,8 @@ void autoindex(Response &response, Request &request, std::string dir_path) {
     response.setStatusMessage("OK");
     response.addHeader("Connection", "keep-alive");
     response.addHeader("Content-Length", to_string(response.getBody().length()));
-    response.addHeader("Content-Type", "text/html"); //**Might not be 100% correct */
+    response.addHeader("Content-Type", "text/html");
     response.addHeader("Date", get_current_time());
-    response.addHeader("Server", "Webserv/1.0"); // ** TEMPORARY, wait until config file is implemented **
+    response.addHeader("Server", "Webserv/1.0");
     closedir(dir);
 }

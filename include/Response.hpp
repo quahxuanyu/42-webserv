@@ -18,8 +18,6 @@ class Response {
 		Response(std::string version, int statusCode, std::string statusMessage);
 		~Response();
 
-		bool close_connection;	//check if the connection should be closed
-
 		void setPath(const std::string path);
 		void setVersion(const std::string version);
 		void setStatusCode(int code);

@@ -71,7 +71,7 @@ void set_headers(Response &response)
     response.addHeader("Content-Length", to_string(response.getBody().length()));
 	response.addHeader("Content-Type", find_mime(response.getPath())); //**Might not be 100% correct */
 	response.addHeader("Date", get_current_time());
-	response.addHeader("Server", "Webserv/1.0"); // ** TEMPORARY, wait until config file is implemented **
+	response.addHeader("Server", "Webserv/1.0");
 }
 
 /***
@@ -87,7 +87,7 @@ Response &parse_cgi_response(Response &response, std::string cgi_response) {
 	response.addHeader("Content-Length", to_string(response.getBody().length()));
 	response.addHeader("Content-Type", get_content_type(cgi_response)); // Extract content type from CGI output
 	response.addHeader("Date", get_current_time());
-	response.addHeader("Server", "Webserv/1.0"); // ** TEMPORARY, wait until config file is implemented **
+	response.addHeader("Server", "Webserv/1.0");
 	return response;
 }
 
@@ -144,7 +144,7 @@ void parse_noncgi_response(Response &response)
 	response.addHeader("Content-Length", to_string(response.getBody().length()));
 	response.addHeader("Content-Type", find_mime("html/loggedin.html")); // Extract content type from CGI output
 	response.addHeader("Date", get_current_time());
-	response.addHeader("Server", "Webserv/1.0"); // ** TEMPORARY, wait until config file is implemented **
+	response.addHeader("Server", "Webserv/1.0");
 }
 
 Session createSession(Request &request)
@@ -208,7 +208,6 @@ void handle_response_error(Response &response, std::string path, int error_code)
 	if (error_code == 504)
 	{	
 		response.addHeader("Connection", "closed");
-		response.close_connection = true;
 	}
 	response.setVersion("HTTP/1.1");
 	response.setStatusCode(error_code);
