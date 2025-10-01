@@ -23,9 +23,13 @@ void processPostRequest(Server &server, Request &request, Response &response)
 	{
 		handle_cgi(request, response, server, location);
 	}
-	else 
+	else if (request.getBody().find("username=") != std::string::npos)
 	{
 		parse_noncgi_response(response);													// Non-CGI (used for cookies)
+	}
+	else
+	{
+		handle_response_error(response, server.getPage(405), 405);							// Forbidden
 	}
 }
 
